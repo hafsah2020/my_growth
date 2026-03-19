@@ -569,24 +569,10 @@
   document.getElementById('dateDisplay').textContent = today.toLocaleDateString('en-GB', options);
 
   // Your Google Apps Script Web App URL goes here
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDciMxkq2GfFIQsKycai7JKUm1ctzsS7jpRD37f5BmgJfou6y1iXqWR1KKOiTeY6Luxg/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfpZQpUKL_JZfFrWDXHhD9sLk0NpPS-jrS1fCF05YMVvYFMd3zuPpvEpk5_6s8cALF/exec';
 
-  let dayCount = 0;
-
-  // Fetch real day count from sheet on page load (works across all browsers/devices)
-  async function fetchDayCount() {
-    try {
-      const res = await fetch(SCRIPT_URL);
-      const json = await res.json();
-      if (json && typeof json.daysLogged === 'number') {
-        dayCount = json.daysLogged;
-      }
-    } catch (e) {
-      console.warn('Could not fetch day count:', e);
-    }
-  }
-
-  fetchDayCount();
+  // Track days from localStorage (simple local count)
+  let dayCount = parseInt(localStorage.getItem('eveningResetCount') || '0');
 
   document.getElementById('resetForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -617,7 +603,6 @@
     };
 
     try {
-      // Use a form submission approach which works reliably with Apps Script
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = SCRIPT_URL;
@@ -636,7 +621,6 @@
       document.body.appendChild(form);
       form.submit();
 
-      // Clean up after submission
       setTimeout(() => {
         document.body.removeChild(form);
         document.body.removeChild(iframe);
@@ -646,8 +630,9 @@
       console.error('Submission error:', err);
     }
 
-    // Increment day count locally after submit
+    // Update local day count
     dayCount = Math.min(dayCount + 1, 14);
+    localStorage.setItem('eveningResetCount', dayCount);
 
     // Show success screen
     document.body.classList.add('submitted');
