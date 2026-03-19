@@ -571,8 +571,10 @@
   // Your Google Apps Script Web App URL goes here
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfpZQpUKL_JZfFrWDXHhD9sLk0NpPS-jrS1fCF05YMVvYFMd3zuPpvEpk5_6s8cALF/exec';
 
-  // Track days from localStorage (simple local count)
-  let dayCount = parseInt(localStorage.getItem('eveningResetCount') || '0');
+  // Calculate day count based on days since challenge start (March 19, 2026)
+  const challengeStart = new Date('2026-03-19');
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const dayCount = Math.min(Math.floor((today - challengeStart) / msPerDay) + 1, 14);
 
   document.getElementById('resetForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -630,9 +632,7 @@
       console.error('Submission error:', err);
     }
 
-    // Update local day count
-    dayCount = Math.min(dayCount + 1, 14);
-    localStorage.setItem('eveningResetCount', dayCount);
+    // Day count is calculated from challenge start date — no update needed
 
     // Show success screen
     document.body.classList.add('submitted');
