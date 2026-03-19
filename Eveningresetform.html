@@ -571,8 +571,22 @@
   // Your Google Apps Script Web App URL goes here
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDciMxkq2GfFIQsKycai7JKUm1ctzsS7jpRD37f5BmgJfou6y1iXqWR1KKOiTeY6Luxg/exec';
 
-  // Track days from localStorage (simple local count)
-  let dayCount = parseInt(localStorage.getItem('eveningResetCount') || '0');
+  let dayCount = 0;
+
+  // Fetch real day count from sheet on page load (works across all browsers/devices)
+  async function fetchDayCount() {
+    try {
+      const res = await fetch(SCRIPT_URL);
+      const json = await res.json();
+      if (json && typeof json.daysLogged === 'number') {
+        dayCount = json.daysLogged;
+      }
+    } catch (e) {
+      console.warn('Could not fetch day count:', e);
+    }
+  }
+
+  fetchDayCount();
 
   document.getElementById('resetForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -603,19 +617,37 @@
     };
 
     try {
-      await fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      // Use a form submission approach which works reliably with Apps Script
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = SCRIPT_URL;
+      form.target = 'hidden_iframe';
+
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'data';
+      input.value = JSON.stringify(payload);
+      form.appendChild(input);
+
+      const iframe = document.createElement('iframe');
+      iframe.name = 'hidden_iframe';
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      document.body.appendChild(form);
+      form.submit();
+
+      // Clean up after submission
+      setTimeout(() => {
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
+      }, 3000);
+
     } catch (err) {
-      // no-cors won't throw on success, just continue
+      console.error('Submission error:', err);
     }
 
-    // Update local day count
+    // Increment day count locally after submit
     dayCount = Math.min(dayCount + 1, 14);
-    localStorage.setItem('eveningResetCount', dayCount);
 
     // Show success screen
     document.body.classList.add('submitted');
