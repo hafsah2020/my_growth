@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Evening Reset</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --ink: #1a1410;
+      --paper: #f5f0e8;
+      --gold: #c9a84c;
+      --gold-light: #e8d5a3;
+      --muted: #8a7968;
+      --success: #4a7c59;
+      --danger: #c0392b;
+      --warm: #f0e6d0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      padding: 0 0 60px 0;
+      background-image: 
+        radial-gradient(ellipse at 20% 0%, rgba(201,168,76,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(201,168,76,0.06) 0%, transparent 50%);
+    }
+
+    header {
+      padding: 40px 24px 24px;
+      border-bottom: 1px solid var(--gold-light);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '🌙';
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      font-size: 48px;
+      opacity: 0.15;
+    }
+
+    .label-tiny {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
+      font-weight: 300;
+      line-height: 1.1;
+      color: var(--ink);
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .date-display {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    .quote {
+      margin: 20px 24px 0;
+      padding: 14px 16px;
+      border-left: 2px solid var(--gold);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 15px;
+      font-style: italic;
+      color: var(--muted);
+      background: var(--warm);
+    }
+
+    .section {
+      padding: 28px 24px 0;
+    }
+
+    .section-title {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gold-light);
+    }
+
+    /* Salah toggles */
+    .salah-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .salah-toggle {
+      flex: 1;
+      position: relative;
+    }
+
+    .salah-toggle input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .salah-toggle label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 18px 12px;
+      border: 1.5px solid var(--gold-light);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: white;
+      gap: 6px;
+    }
+
+    .salah-toggle label .icon {
+      font-size: 22px;
+    }
+
+    .salah-toggle label .name {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .salah-toggle label .time {
+      font-size: 10px;
+      color: var(--gold);
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+    }
+
+    .salah-toggle input:checked + label {
+      background: var(--ink);
+      border-color: var(--ink);
+    }
+
+    .salah-toggle input:checked + label .name,
+    .salah-toggle input:checked + label .time {
+      color: var(--gold-light);
+    }
+
+    .salah-toggle input:checked + label::after {
+      content: '✓ Prayed';
+      font-size: 10px;
+      color: var(--gold);
+      letter-spacing: 1px;
+    }
+
+    /* Mood selector */
+    .mood-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .mood-option {
+      position: relative;
+      flex: 1;
+    }
+
+    .mood-option input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .mood-option label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 8px;
+      border: 1.5px solid var(--gold-light);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+      gap: 4px;
+    }
+
+    .mood-option label .emoji { font-size: 20px; }
+    .mood-option label .word {
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .mood-option input:checked + label {
+      border-color: var(--gold);
+      background: var(--warm);
+    }
+
+    /* Text inputs */
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .field input,
+    .field textarea {
+      width: 100%;
+      background: white;
+      border: 1.5px solid var(--gold-light);
+      border-radius: 4px;
+      padding: 12px 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+      resize: none;
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      border-color: var(--gold);
+    }
+
+    .field input::placeholder,
+    .field textarea::placeholder {
+      color: var(--gold-light);
+      font-style: italic;
+    }
+
+    /* Task completed toggle */
+    .completed-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .completed-option {
+      position: relative;
+      flex: 1;
+    }
+
+    .completed-option input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .completed-option label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 14px;
+      border: 1.5px solid var(--gold-light);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .completed-option.yes input:checked + label {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    .completed-option.no input:checked + label {
+      background: #f8e8e6;
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* Submit button */
+    .submit-wrap {
+      padding: 32px 24px 0;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 18px;
+      background: var(--ink);
+      color: var(--gold);
+      border: none;
+      border-radius: 4px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button[type="submit"]:hover {
+      background: #2d2520;
+    }
+
+    button[type="submit"]:active {
+      transform: scale(0.98);
+    }
+
+    button[type="submit"]:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Success state */
+    .success-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 24px;
+      text-align: center;
+      gap: 16px;
+    }
+
+    .success-screen.show { display: flex; }
+    body.submitted .form-body { display: none; }
+
+    .success-icon {
+      font-size: 56px;
+      animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes pop {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .success-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 300;
+      color: var(--ink);
+    }
+
+    .success-sub {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      line-height: 1.8;
+    }
+
+    .progress-bar-wrap {
+      width: 100%;
+      max-width: 280px;
+      background: var(--gold-light);
+      border-radius: 2px;
+      height: 3px;
+      margin-top: 8px;
+    }
+
+    .progress-bar-fill {
+      height: 3px;
+      background: var(--gold);
+      border-radius: 2px;
+      transition: width 1s ease;
+    }
+
+    .progress-label {
+      font-size: 10px;
+      color: var(--gold);
+      letter-spacing: 2px;
+      margin-top: 6px;
+    }
+
+    .reward-note {
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px dashed var(--gold);
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--muted);
+      max-width: 280px;
+      line-height: 1.6;
+    }
+
+    .reward-note strong {
+      color: var(--gold);
+      font-weight: 400;
+    }
+
+    .error-msg {
+      padding: 12px 24px 0;
+      font-size: 11px;
+      color: var(--danger);
+      letter-spacing: 1px;
+      display: none;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--gold-light);
+      margin: 28px 24px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="form-body">
+  <header>
+    <div class="label-tiny">Evening Reset</div>
+    <h1>How was<br/><em>tonight?</em></h1>
+    <div class="date-display" id="dateDisplay"></div>
+  </header>
+
+  <div class="quote">
+    "I am becoming someone who protects her evenings."
+  </div>
+
+  <form id="resetForm">
+
+    <!-- SALAH -->
+    <div class="section">
+      <div class="section-title">Salah</div>
+      <div class="salah-row">
+        <div class="salah-toggle">
+          <input type="checkbox" id="maghrib" name="maghrib"/>
+          <label for="maghrib">
+            <span class="icon">🕌</span>
+            <span class="name">Maghrib</span>
+            <span class="time">6:41 pm</span>
+          </label>
+        </div>
+        <div class="salah-toggle">
+          <input type="checkbox" id="isha" name="isha"/>
+          <label for="isha">
+            <span class="icon">🌙</span>
+            <span class="name">Isha</span>
+            <span class="time">8:15 pm</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- PRODUCTIVE TASK -->
+    <div class="section">
+      <div class="section-title">Productive Task</div>
+      <div class="field">
+        <label for="task">What was your task tonight?</label>
+        <input type="text" id="task" name="task" placeholder="e.g. AppScript lead tracker"/>
+      </div>
+      <div class="field">
+        <label>Did you complete it?</label>
+        <div class="completed-row">
+          <div class="completed-option yes">
+            <input type="radio" name="completed" id="yes" value="Yes"/>
+            <label for="yes">✓ Yes</label>
+          </div>
+          <div class="completed-option no">
+            <input type="radio" name="completed" id="no" value="No"/>
+            <label for="no">✗ Not quite</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- DAILY REVIEW -->
+    <div class="section">
+      <div class="section-title">Daily Review</div>
+
+      <div class="field">
+        <label>How did you feel today?</label>
+        <div class="mood-row">
+          <div class="mood-option">
+            <input type="radio" name="mood" id="good" value="Good"/>
+            <label for="good"><span class="emoji">🟢</span><span class="word">Good</span></label>
+          </div>
+          <div class="mood-option">
+            <input type="radio" name="mood" id="okay" value="Okay"/>
+            <label for="okay"><span class="emoji">🟡</span><span class="word">Okay</span></label>
+          </div>
+          <div class="mood-option">
+            <input type="radio" name="mood" id="rough" value="Rough"/>
+            <label for="rough"><span class="emoji">🔴</span><span class="word">Rough</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="win">Win of the day</label>
+        <textarea id="win" name="win" rows="2" placeholder="Something you did well, however small..."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="block">What got in the way?</label>
+        <textarea id="block" name="block" rows="2" placeholder="Be honest, no judgment here..."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="tomorrow">Tomorrow I will</label>
+        <textarea id="tomorrow" name="tomorrow" rows="2" placeholder="One intention for tomorrow..."></textarea>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg">Please fill in at least your task and how you felt.</div>
+
+    <div class="submit-wrap">
+      <button type="submit" id="submitBtn">Save Today's Entry →</button>
+    </div>
+
+  </form>
+</div>
+
+<!-- SUCCESS SCREEN -->
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">🌙</div>
+  <div class="success-title">Entry saved.<br/>Rest well.</div>
+  <div class="success-sub">
+    Sleep by 11pm.<br/>
+    Fajr will be easier tomorrow.
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">— / 14 days</div>
+  <div class="reward-note">
+    Hit <strong>12 of 14 days</strong> to unlock your reward —<br/>
+    <strong>🍽️ a meal or treat you love.</strong>
+  </div>
+</div>
+
+<script>
+  // Display today's date
+  const today = new Date();
+  const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+  document.getElementById('dateDisplay').textContent = today.toLocaleDateString('en-GB', options);
+
+  // Your Google Apps Script Web App URL goes here
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDciMxkq2GfFIQsKycai7JKUm1ctzsS7jpRD37f5BmgJfou6y1iXqWR1KKOiTeY6Luxg/exec';
+
+  // Track days from localStorage (simple local count)
+  let dayCount = parseInt(localStorage.getItem('eveningResetCount') || '0');
+
+  document.getElementById('resetForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const task = document.getElementById('task').value.trim();
+    const mood = document.querySelector('input[name="mood"]:checked');
+
+    if (!task || !mood) {
+      const err = document.getElementById('errorMsg');
+      err.style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const payload = {
+      date: today.toLocaleDateString('en-GB'),
+      maghrib: document.getElementById('maghrib').checked ? 'Yes' : 'No',
+      isha: document.getElementById('isha').checked ? 'Yes' : 'No',
+      task: task,
+      completed: document.querySelector('input[name="completed"]:checked')?.value || 'No',
+      mood: mood.value,
+      win: document.getElementById('win').value.trim(),
+      block: document.getElementById('block').value.trim(),
+      tomorrow: document.getElementById('tomorrow').value.trim(),
+    };
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      // no-cors won't throw on success, just continue
+    }
+
+    // Update local day count
+    dayCount = Math.min(dayCount + 1, 14);
+    localStorage.setItem('eveningResetCount', dayCount);
+
+    // Show success screen
+    document.body.classList.add('submitted');
+    const successScreen = document.getElementById('successScreen');
+    successScreen.classList.add('show');
+
+    // Animate progress bar
+    const pct = (dayCount / 14) * 100;
+    setTimeout(() => {
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressLabel').textContent = `${dayCount} / 14 days`;
+    }, 300);
+  });
+</script>
+
+</body>
+</html>
