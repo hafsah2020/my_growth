@@ -829,14 +829,14 @@ const DEFAULT_STATE = {
   ],
   tasks: {
     priority: [
-      { text: "Finalise churn report slides", priority: "p1", done: false },
-      { text: "Send updated dashboard link to CEO", priority: "p1", done: false },
-      { text: "Fix null values in Q2 sales data", priority: "p2", done: false },
+      { text: "Finalise churn report slides", priority: "p1", done: false, date: new Date().toISOString().split('T')[0] },
+      { text: "Send updated dashboard link to CEO", priority: "p1", done: false, date: new Date().toISOString().split('T')[0] },
+      { text: "Fix null values in Q2 sales data", priority: "p2", done: false, date: new Date().toISOString().split('T')[0] },
     ],
     scheduled: [
-      { text: "Team standup at 10am", priority: "p3", done: false },
-      { text: "Review ETL script PR", priority: "p2", done: false },
-      { text: "Write documentation for pipeline", priority: "p3", done: false },
+      { text: "Team standup at 10am", priority: "p3", done: false, date: new Date().toISOString().split('T')[0] },
+      { text: "Review ETL script PR", priority: "p2", done: false, date: new Date().toISOString().split('T')[0] },
+      { text: "Write documentation for pipeline", priority: "p3", done: false, date: new Date().toISOString().split('T')[0] },
     ]
   },
   deliverables: [
@@ -911,10 +911,18 @@ async function loadFromSheet() {
 
       // Tasks — split back into priority/scheduled
       const rawTasks = d.tasks || [];
+      const todayStr = new Date().toISOString().split('T')[0];
       state.tasks = {
         priority:  rawTasks.filter(t => t.type === 'priority').map(({type, ...rest}) => ({...rest, done: rest.done === true || rest.done === 'true'})),
         scheduled: rawTasks.filter(t => t.type === 'scheduled').map(({type, ...rest}) => ({...rest, done: rest.done === true || rest.done === 'true'}))
       };
+      // Auto-mark tasks from previous days as done so they save correctly
+      // (they won't show on frontend due to date filter, but Sheet keeps them)
+      ['priority','scheduled'].forEach(type => {
+        state.tasks[type].forEach(t => {
+          if (t.date && t.date !== todayStr) t.done = true;
+        });
+      });
 
       // Deliverables
       state.deliverables = d.deliverables || [];
@@ -1037,7 +1045,12 @@ function renderTasks() {
     const container = document.getElementById(type === 'priority' ? 'priority-tasks' : 'scheduled-tasks');
     container.innerHTML = '';
     // Only show tasks that are NOT done
-    const visible = state.tasks[type].filter(t => !t.done && t.done !== 'true' && t.done !== true);
+    const todayStr = new Date().toISOString().split('T')[0];
+    const visible = state.tasks[type].filter(t => {
+      const isDone = t.done === true || t.done === 'true';
+      const isToday = !t.date || t.date === todayStr;
+      return !isDone && isToday;
+    });
     if (visible.length === 0) {
       container.innerHTML = `<div style="padding:12px 0;font-size:12px;color:var(--text-muted);text-align:center;">
         ${type === 'priority' ? '🎉 All priority tasks done!' : '✅ Nothing scheduled — add a task'}</div>`;
@@ -1167,7 +1180,8 @@ function addTask() {
   const text = document.getElementById('t-name').value.trim();
   if (!text) return;
   const type = document.getElementById('t-type').value;
-  state.tasks[type].push({ text, priority: document.getElementById('t-priority').value, done: false });
+  const today = new Date().toISOString().split('T')[0];
+  state.tasks[type].push({ text, priority: document.getElementById('t-priority').value, done: false, date: today });
   closeModal();
   render();
   scheduleSave();
