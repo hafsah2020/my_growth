@@ -809,7 +809,7 @@
 // ══════════════════════════════════════════════════════════════
 //  STEP 1: Paste your Web App URL here after deploying
 // ══════════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9uygWsXQ-1w3fxmIxPaLkjOY8Ot_PNdh5aj0i0mEJWDV4Pyt9Y_piHMforupr8GjV6A/exec';
+const APPS_SCRIPT_URL = 'YOUR_WEB_APP_URL_HERE';
 
 // ── STATE ──
 let state = {
@@ -1048,7 +1048,7 @@ function renderTasks() {
     const todayStr = new Date().toISOString().split('T')[0];
     const visible = state.tasks[type].filter(t => {
       const isDone = t.done === true || t.done === 'true';
-      const isToday = !t.date || t.date === todayStr;
+      const isToday = t.date === todayStr;   // must have today's date — no date = old task, hide it
       return !isDone && isToday;
     });
     if (visible.length === 0) {
@@ -1129,9 +1129,11 @@ function updateStats() {
     return d >= today && d <= weekEnd;
   }).length;
   document.getElementById('stat-week').textContent = dueWeek;
+  const todayStr2 = new Date().toISOString().split('T')[0];
   const allTasks = [...state.tasks.priority, ...state.tasks.scheduled];
-  const todayTasks = allTasks.filter(t => t.done !== true && t.done !== 'true');
-  const doneTasks  = allTasks.filter(t => t.done === true || t.done === 'true');
+  // Only count tasks that belong to today
+  const todayTasks = allTasks.filter(t => t.date === todayStr2 && t.done !== true && t.done !== 'true');
+  const doneTasks  = allTasks.filter(t => t.date === todayStr2 && (t.done === true || t.done === 'true'));
   document.getElementById('stat-tasks').textContent = todayTasks.length;
   document.getElementById('stat-done').textContent = doneTasks.length;
   const urgent = state.projects.filter(p => {
