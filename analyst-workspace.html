@@ -1,233 +1,1245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Raw Apps Script Data Viewer</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Analyst Workspace</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --surface2: #F1EFEB;
+    --border: #E8E5DF;
+    --text: #1A1917;
+    --text-muted: #9B9690;
+    --text-light: #C4C0B8;
+    --accent: #D4621A;
+    --accent-light: #FDF0E8;
+    --green: #2E7D52;
+    --green-light: #E8F5EE;
+    --yellow: #B45309;
+    --yellow-light: #FEF3C7;
+    --red: #C0392B;
+    --red-light: #FDECEA;
+    --blue: #1E5FA8;
+    --blue-light: #EBF3FC;
+    --purple: #6D3FA0;
+    --purple-light: #F3EDFB;
+    --sidebar-w: 240px;
+  }
+
   body {
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
-    margin: 0;
-    padding: 0;
-  }
-
-  header {
-    background: #222;
-    color: #fff;
-    padding: 1rem;
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
     display: flex;
-    justify-content: space-between;
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 10;
+  }
+
+  .sidebar-logo {
+    padding: 0 16px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .sidebar-logo .workspace-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
     align-items: center;
+    gap: 8px;
+  }
+  .sidebar-logo .workspace-name .dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  .sidebar-logo .workspace-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 3px;
+    padding-left: 16px;
   }
 
-  main {
-    padding: 1rem;
+  .sidebar-section {
+    padding: 4px 8px;
+    margin-bottom: 2px;
+  }
+  .sidebar-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    padding: 8px 8px 4px;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    transition: background 0.15s;
+    text-decoration: none;
+  }
+  .sidebar-item:hover, .sidebar-item.active {
+    background: var(--border);
+  }
+  .sidebar-item .icon { font-size: 15px; width: 18px; text-align: center; }
+  .sidebar-badge {
+    margin-left: auto;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
   }
 
-  h2 {
-    margin-top: 2rem;
-    font-size: 1.2rem;
-    color: #333;
+  /* ── MAIN ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
   }
 
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .topbar-breadcrumb {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .topbar-breadcrumb span.current { color: var(--text); font-weight: 500; }
+  .topbar-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--surface2);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── PAGE CONTENT ── */
+  .page {
+    padding: 40px 48px 80px;
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .page-header {
+    margin-bottom: 36px;
+  }
+  .page-emoji { font-size: 40px; margin-bottom: 12px; display: block; }
+  .page-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  /* ── SECTIONS ── */
+  .section { margin-bottom: 40px; }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── STAT CARDS ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-color: var(--text-light); }
+  .stat-card .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .stat-card .stat-number {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .stat-card .stat-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .stat-card.orange .stat-number { color: var(--accent); }
+  .stat-card.green .stat-number  { color: var(--green); }
+  .stat-card.red .stat-number    { color: var(--red); }
+  .stat-card.blue .stat-number   { color: var(--blue); }
+
+  /* ── TODAY PLANNER ── */
+  .today-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .today-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .today-block-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .today-block-header.orange { background: var(--accent-light); color: var(--accent); }
+  .today-block-header.green  { background: var(--green-light);  color: var(--green); }
+  .today-block-body { padding: 12px 16px; }
+
+  /* ── TASK ROW ── */
   .task-row {
-    background: #fff;
-    padding: 0.5rem;
-    margin-bottom: 0.2rem;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9rem;
-    word-break: break-word;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--surface2);
+    cursor: pointer;
   }
+  .task-row:last-child { border-bottom: none; }
+  .task-check {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--text-light);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .task-check.done {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+    font-size: 10px;
+  }
+  .task-text { flex: 1; font-size: 13px; line-height: 1.5; }
+  .task-text.done { text-decoration: line-through; color: var(--text-muted); }
+  .task-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .tag-p1 { background: #FDECEA; color: var(--red); }
+  .tag-p2 { background: var(--yellow-light); color: var(--yellow); }
+  .tag-p3 { background: var(--blue-light); color: var(--blue); }
 
-  table {
+  /* ── PROJECT TABLE ── */
+  .project-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    width: 100%;
+  }
+  .project-table table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 0.5rem;
+    font-size: 13px;
+  }
+  .project-table thead th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .project-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+    cursor: pointer;
+  }
+  .project-table tbody tr:last-child { border-bottom: none; }
+  .project-table tbody tr:hover { background: var(--bg); }
+  .project-table td { padding: 11px 16px; vertical-align: middle; }
+  .project-name { font-weight: 500; }
+  .project-name small { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+  .status-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+  .status-pill.active   { background: var(--green-light);  color: var(--green);  }
+  .status-pill.active::before   { background: var(--green); }
+  .status-pill.review   { background: var(--yellow-light); color: var(--yellow); }
+  .status-pill.review::before   { background: var(--yellow); }
+  .status-pill.blocked  { background: var(--red-light);    color: var(--red);    }
+  .status-pill.blocked::before  { background: var(--red); }
+  .status-pill.planning { background: var(--purple-light); color: var(--purple); }
+  .status-pill.planning::before { background: var(--purple); }
+  .status-pill.done     { background: var(--surface2);     color: var(--text-muted); }
+  .status-pill.done::before     { background: var(--text-light); }
+
+  .priority-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .priority-dot.high   { background: var(--red); }
+  .priority-dot.medium { background: var(--yellow); }
+  .priority-dot.low    { background: var(--blue); }
+
+  .deadline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .deadline.overdue { color: var(--red); font-weight: 600; }
+  .deadline.soon    { color: var(--yellow); font-weight: 600; }
+
+  .progress-bar-wrap { width: 80px; }
+  .progress-bar {
+    height: 5px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: var(--green);
+  }
+  .progress-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 3px;
+    font-family: 'JetBrains Mono', monospace;
   }
 
-  table td, table th {
-    border: 1px solid #ccc;
-    padding: 0.4rem;
-    font-family: monospace;
-    font-size: 0.85rem;
+  /* ── STAKEHOLDER TABLE ── */
+  .stakeholder-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
   }
-
-  #daily-notes {
+  .stakeholder-table table {
     width: 100%;
-    height: 150px;
-    margin-top: 0.5rem;
-    font-family: monospace;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .stakeholder-table thead th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .stakeholder-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .stakeholder-table tbody tr:last-child { border-bottom: none; }
+  .stakeholder-table tbody tr:hover { background: var(--bg); }
+  .stakeholder-table td { padding: 11px 16px; vertical-align: middle; }
+
+  .avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: white;
+  }
+  .stakeholder-name-cell { display: flex; align-items: center; gap: 9px; }
+  .deliverable-tag {
+    font-size: 11px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--text);
+    font-weight: 500;
   }
 
+  /* ── ADD ROW BUTTON ── */
+  .add-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 0 0 10px 10px;
+    transition: background 0.1s;
+  }
+  .add-row:hover { background: var(--surface2); color: var(--text); }
+
+  /* ── NOTES AREA ── */
+  .notes-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .notes-block textarea {
+    width: 100%;
+    min-height: 100px;
+    border: none;
+    outline: none;
+    font-family: 'Sora', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    background: transparent;
+    resize: vertical;
+    line-height: 1.7;
+  }
+  .notes-block textarea::placeholder { color: var(--text-light); }
+
+  /* ── EDITABLE CELLS ── */
+  [contenteditable="true"]:focus {
+    outline: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 1px 4px;
+  }
+
+  /* ── MODAL (add row) ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 28px;
+    width: 480px;
+    max-width: 95vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 20px; }
+  .modal label { font-size: 12px; color: var(--text-muted); font-weight: 500; display: block; margin-bottom: 4px; margin-top: 12px; }
+  .modal input, .modal select, .modal textarea {
+    width: 100%;
+    padding: 8px 10px;
+    font-family: 'Sora', sans-serif;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+  .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: 'Sora', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+  /* ── RESPONSIVE ── */
+  /* ── SAVE STATUS ── */
   .save-status {
-    font-size: 0.9rem;
-    font-weight: bold;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 4px 10px;
+    border-radius: 6px;
+    transition: all 0.3s;
+    min-width: 120px;
+    text-align: center;
   }
+  .save-status.saving  { background: var(--yellow-light); color: var(--yellow); }
+  .save-status.saved   { background: var(--green-light);  color: var(--green); }
+  .save-status.error   { background: var(--red-light);    color: var(--red); }
+  .save-status.loading { background: var(--blue-light);   color: var(--blue); }
+  .save-status.loaded  { background: var(--green-light);  color: var(--green); }
 
-  .save-status.loading { color: orange; }
-  .save-status.loaded { color: green; }
-  .save-status.error { color: red; }
-
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .today-grid { grid-template-columns: 1fr; }
+    .page { padding: 24px 20px 60px; }
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <div>Raw Apps Script Data Viewer</div>
-  <div id="topbar-date"></div>
-</header>
-
-<main>
-  <div class="save-status" id="save-status"></div>
-
-  <!-- STATS -->
-  <h2>Stats</h2>
-  <div id="stats-container">
-    <div>Priority Tasks: <span id="stat-priority"></span></div>
-    <div>Scheduled Tasks: <span id="stat-scheduled"></span></div>
-    <div>Projects: <span id="stat-projects"></span></div>
-    <div>Deliverables: <span id="stat-deliverables"></span></div>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="workspace-name"><span class="dot"></span> My Workspace</div>
+    <div class="workspace-sub">Analyst OS</div>
   </div>
 
-  <!-- TASKS -->
-  <h2>Priority Tasks</h2>
-  <div id="priority-tasks"></div>
+  <div class="sidebar-section-label">Navigation</div>
+  <div class="sidebar-section">
+    <a class="sidebar-item active" href="#overview">
+      <span class="icon">🏠</span> Overview
+      <span class="sidebar-badge" id="sb-urgent">0</span>
+    </a>
+    <a class="sidebar-item" href="#projects">
+      <span class="icon">📂</span> Projects
+    </a>
+    <a class="sidebar-item" href="#today">
+      <span class="icon">☀️</span> Today's Plan
+    </a>
+    <a class="sidebar-item" href="#stakeholders">
+      <span class="icon">🤝</span> Deliverables
+    </a>
+  </div>
 
-  <h2>Scheduled Tasks</h2>
-  <div id="scheduled-tasks"></div>
+  <div class="sidebar-section-label">Quick Actions</div>
+  <div class="sidebar-section">
+    <div class="sidebar-item" onclick="openModal('project')"><span class="icon">➕</span> Add Project</div>
+    <div class="sidebar-item" onclick="openModal('task')"><span class="icon">✏️</span> Add Task</div>
+    <div class="sidebar-item" onclick="openModal('deliverable')"><span class="icon">📌</span> Add Deliverable</div>
+    <div class="sidebar-item" onclick="toggleDebug()"><span class="icon">🔍</span> Debug Panel</div>
+  </div>
+</aside>
 
-  <!-- PROJECTS -->
-  <h2>Projects</h2>
-  <table>
-    <thead>
-      <tr><th>Raw Project Data</th></tr>
-    </thead>
-    <tbody id="project-tbody"></tbody>
-  </table>
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">
+      Workspace <span>›</span> <span class="current">Analyst OS</span>
+    </div>
+    <div id="save-status" class="save-status"></div>
+    <div class="topbar-date" id="topbar-date">—</div>
+  </div>
 
-  <!-- DELIVERABLES -->
-  <h2>Deliverables</h2>
-  <table>
-    <thead>
-      <tr><th>Raw Deliverable Data</th></tr>
-    </thead>
-    <tbody id="deliverable-tbody"></tbody>
-  </table>
+  <div class="page">
+    <!-- PAGE HEADER -->
+    <div class="page-header" id="overview">
+      <span class="page-emoji">📊</span>
+      <h1 class="page-title" contenteditable="true">Analyst Workspace</h1>
+      <p class="page-subtitle">Track projects, plan your day, and manage deliverables — all in one place.</p>
+    </div>
 
-  <!-- NOTES -->
-  <h2>Last Note</h2>
-  <textarea id="daily-notes" readonly></textarea>
-</main>
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card orange">
+        <div class="stat-label">Active Projects</div>
+        <div class="stat-number" id="stat-active">0</div>
+        <div class="stat-sub">in progress</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Due This Week</div>
+        <div class="stat-number" id="stat-week">0</div>
+        <div class="stat-sub">deadlines</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Today's Tasks</div>
+        <div class="stat-number" id="stat-tasks">0</div>
+        <div class="stat-sub">planned</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Completed</div>
+        <div class="stat-number" id="stat-done">0</div>
+        <div class="stat-sub">tasks done today</div>
+      </div>
+    </div>
+
+    <!-- TODAY'S PLAN -->
+    <div class="section" id="today">
+      <div class="section-title">☀️ Today's Plan</div>
+      <div class="today-grid">
+        <div class="today-block">
+          <div class="today-block-header orange">🔥 Priority Tasks</div>
+          <div class="today-block-body" id="priority-tasks">
+            <!-- tasks injected -->
+          </div>
+          <div class="add-row" onclick="openModal('task')">+ Add task</div>
+        </div>
+        <div class="today-block">
+          <div class="today-block-header green">📅 Scheduled Work</div>
+          <div class="today-block-body" id="scheduled-tasks">
+            <!-- tasks injected -->
+          </div>
+          <div class="add-row" onclick="openModal('task')">+ Add task</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="section" id="projects">
+      <div class="section-title">📂 Projects & Deadlines</div>
+      <div class="project-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Deadline</th>
+              <th>Progress</th>
+            </tr>
+          </thead>
+          <tbody id="project-tbody">
+            <!-- rows injected -->
+          </tbody>
+        </table>
+        <div class="add-row" onclick="openModal('project')">+ New project</div>
+      </div>
+    </div>
+
+    <!-- STAKEHOLDER DELIVERABLES -->
+    <div class="section" id="stakeholders">
+      <div class="section-title">🤝 Stakeholder Deliverables</div>
+      <div class="stakeholder-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Stakeholder</th>
+              <th>Deliverable</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="deliverable-tbody">
+            <!-- rows injected -->
+          </tbody>
+        </table>
+        <div class="add-row" onclick="openModal('deliverable')">+ New deliverable</div>
+      </div>
+    </div>
+
+    <!-- DEBUG PANEL -->
+    <div class="section" id="debug-section" style="display:none">
+      <div class="section-title">🔍 Debug — Raw Sheet Data</div>
+      <div style="background:#1A1917;color:#E8E5DF;padding:16px;border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre-wrap;" id="debug-output">Loading...</div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="section">
+      <div class="section-title">📝 Brain Dump / Notes</div>
+      <div class="notes-block">
+        <textarea id="daily-notes" placeholder="Write anything here — ideas, blockers, things to follow up on…"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+
+  <!-- PROJECT MODAL -->
+  <div class="modal" id="modal-project" style="display:none">
+    <h3>➕ New Project</h3>
+    <label>Project Name</label>
+    <input type="text" id="p-name" placeholder="e.g. Q3 Churn Analysis"/>
+    <label>Description</label>
+    <input type="text" id="p-desc" placeholder="e.g. Analyse customer drop-off last quarter"/>
+    <label>Status</label>
+    <select id="p-status">
+      <option value="planning">Planning</option>
+      <option value="active">Active</option>
+      <option value="review">In Review</option>
+      <option value="blocked">Blocked</option>
+      <option value="done">Done</option>
+    </select>
+    <label>Priority</label>
+    <select id="p-priority">
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+    </select>
+    <label>Deadline</label>
+    <input type="date" id="p-deadline"/>
+    <label>Progress (%)</label>
+    <input type="number" id="p-progress" min="0" max="100" placeholder="0"/>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addProject()">Add Project</button>
+    </div>
+  </div>
+
+  <!-- TASK MODAL -->
+  <div class="modal" id="modal-task" style="display:none">
+    <h3>✏️ New Task</h3>
+    <label>Task</label>
+    <input type="text" id="t-name" placeholder="e.g. Clean sales dataset"/>
+    <label>Type</label>
+    <select id="t-type">
+      <option value="priority">Priority Task 🔥</option>
+      <option value="scheduled">Scheduled Work 📅</option>
+    </select>
+    <label>Priority Level</label>
+    <select id="t-priority">
+      <option value="p1">P1 – Critical</option>
+      <option value="p2">P2 – Important</option>
+      <option value="p3">P3 – Normal</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addTask()">Add Task</button>
+    </div>
+  </div>
+
+  <!-- DELIVERABLE MODAL -->
+  <div class="modal" id="modal-deliverable" style="display:none">
+    <h3>📌 New Deliverable</h3>
+    <label>Stakeholder / Client</label>
+    <input type="text" id="d-stakeholder" placeholder="e.g. Marketing Team"/>
+    <label>Deliverable</label>
+    <input type="text" id="d-name" placeholder="e.g. Monthly KPI Dashboard"/>
+    <label>Due Date</label>
+    <input type="date" id="d-due"/>
+    <label>Status</label>
+    <select id="d-status">
+      <option value="planning">Planning</option>
+      <option value="active">In Progress</option>
+      <option value="review">In Review</option>
+      <option value="done">Done</option>
+      <option value="blocked">Blocked</option>
+    </select>
+    <label>Notes</label>
+    <textarea id="d-notes" rows="2" placeholder="Any extra context…"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addDeliverable()">Add Deliverable</button>
+    </div>
+  </div>
+
+</div>
 
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9uygWsXQ-1w3fxmIxPaLkjOY8Ot_PNdh5aj0i0mEJWDV4Pyt9Y_piHMforupr8GjV6A/exec'; // replace with your Apps Script web app URL
-let state = {};
+// ══════════════════════════════════════════════════════════════
+//  STEP 1: Paste your Web App URL here after deploying
+// ══════════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9uygWsXQ-1w3fxmIxPaLkjOY8Ot_PNdh5aj0i0mEJWDV4Pyt9Y_piHMforupr8GjV6A/exec';
 
-// Load everything from Apps Script
+// ── STATE ──
+let state = {
+  projects: [],
+  tasks: { priority: [], scheduled: [] },
+  deliverables: [],
+  notes: []
+};
+
+// Default sample data shown before first save
+const DEFAULT_STATE = {
+  projects: [
+    { name: "Sales KPI Dashboard", desc: "Monthly revenue & pipeline tracker", status: "active", priority: "high", deadline: futureDate(5), progress: 65 },
+    { name: "Customer Churn Analysis", desc: "Q2 drop-off cohort study", status: "review", priority: "high", deadline: futureDate(2), progress: 90 },
+    { name: "Data Pipeline Automation", desc: "ETL script for weekly reports", status: "planning", priority: "medium", deadline: futureDate(14), progress: 20 },
+    { name: "Market Segmentation Model", desc: "Cluster analysis for product team", status: "blocked", priority: "high", deadline: futureDate(-1), progress: 40 },
+  ],
+  tasks: {
+    priority: [
+      { text: "Finalise churn report slides", priority: "p1", done: false, date: new Date().toISOString().split('T')[0] },
+      { text: "Send updated dashboard link to CEO", priority: "p1", done: false, date: new Date().toISOString().split('T')[0] },
+      { text: "Fix null values in Q2 sales data", priority: "p2", done: false, date: new Date().toISOString().split('T')[0] },
+    ],
+    scheduled: [
+      { text: "Team standup at 10am", priority: "p3", done: false, date: new Date().toISOString().split('T')[0] },
+      { text: "Review ETL script PR", priority: "p2", done: false, date: new Date().toISOString().split('T')[0] },
+      { text: "Write documentation for pipeline", priority: "p3", done: false, date: new Date().toISOString().split('T')[0] },
+    ]
+  },
+  deliverables: [
+    { stakeholder: "CEO", name: "Weekly Revenue Report", due: futureDate(1), status: "active", notes: "Export from Looker" },
+    { stakeholder: "Marketing Team", name: "Campaign Attribution Analysis", due: futureDate(4), status: "active", notes: "Needs GA4 data" },
+    { stakeholder: "Product Team", name: "User Behaviour Dashboard", due: futureDate(7), status: "planning", notes: "Waiting on requirements" },
+    { stakeholder: "Investor Relations", name: "Q2 KPI Deck", due: futureDate(10), status: "review", notes: "Draft sent, feedback pending" },
+  ]
+};
+
+// ── SAVE / LOAD ──
+let saveTimer = null;
+
+function scheduleSave() {
+  if (APPS_SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return; // not set up yet
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveToSheet, 1500); // debounce — saves 1.5s after last change
+  showSaveStatus('saving');
+}
+
+async function saveToSheet() {
+  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbz9uygWsXQ-1w3fxmIxPaLkjOY8Ot_PNdh5aj0i0mEJWDV4Pyt9Y_piHMforupr8GjV6A/exec') return;
+  try {
+    // Flatten tasks — field order must match Sheet columns: type, text, priority, done, date
+    const allTasks = [
+      ...state.tasks.priority.map(t => ({ type: 'priority', text: t.text, priority: t.priority, done: t.done, date: t.date || '' })),
+      ...state.tasks.scheduled.map(t => ({ type: 'scheduled', text: t.text, priority: t.priority, done: t.done, date: t.date || '' }))
+    ];
+    const today = new Date().toISOString().split('T')[0];
+    const notesContent = document.getElementById('daily-notes').value;
+
+    const payload = {
+      projects: state.projects,
+      tasks: allTasks,
+      deliverables: state.deliverables,
+      notes: [{ date: today, content: notesContent }]
+    };
+
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (json.success) showSaveStatus('saved');
+    else showSaveStatus('error');
+  } catch (e) {
+    showSaveStatus('error');
+  }
+}
+
 async function loadFromSheet() {
+  if (APPS_SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
+    // No URL set — load sample data
+    state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    render();
+    return;
+  }
+
   showSaveStatus('loading');
   try {
     const res = await fetch(APPS_SCRIPT_URL);
     const json = await res.json();
 
     if (json.success && json.data) {
-      state = json.data || {};
+      const d = json.data;
 
-      // Render each section as-is
-      renderStats();
-      renderTasks();
-      renderProjects();
-      renderDeliverables();
-      renderNotes();
+
+
+      // ── Tasks: Apps Script sets show=true for today's undone tasks ──
+      const rawTasks = d.tasks || [];
+      state.tasks = {
+        priority:  rawTasks.filter(t => t.type === 'priority'  && t.show === true),
+        scheduled: rawTasks.filter(t => t.type === 'scheduled' && t.show === true)
+      };
+
+      // ── Projects: Apps Script sets show=true for non-done projects ──
+      state.projects = (d.projects || []).filter(p => p.show === true).map(p => ({
+        ...p,
+        progress: parseInt(p.progress) || 0
+      }));
+
+      // ── Deliverables: Apps Script sets show=true for non-done deliverables ──
+      state.deliverables = (d.deliverables || []).filter(d => d.show === true);
+
+      // ── Debug ──
+      updateDebug(rawTasks, d.today || '', state.tasks);
+
+
+
+      // ── Notes ──
+      if (d.notes && d.notes.length > 0) {
+        const latest = d.notes[d.notes.length - 1];
+        document.getElementById('daily-notes').value = latest.content || '';
+      }
 
       showSaveStatus('loaded');
-    } else {
-      showSaveStatus('error');
     }
   } catch (e) {
     showSaveStatus('error');
-    console.error(e);
+    state = JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
+  render();
+}
+
+// ── DEBUG ──
+function toggleDebug() {
+  const panel = document.getElementById('debug-section');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateDebug(rawTasks, todayStr, parsedTasks) {
+  const out = document.getElementById('debug-output');
+  if (!out) return;
+  const lines = [
+    '📅 todayStr = ' + todayStr,
+    '📦 rawTasks from sheet = ' + rawTasks.length,
+    '✅ priority tasks loaded for today = ' + (parsedTasks ? parsedTasks.priority.length : '?'),
+    '✅ scheduled tasks loaded for today = ' + (parsedTasks ? parsedTasks.scheduled.length : '?'),
+    '',
+    '── RAW (as received from sheet) ──',
+    ...rawTasks.slice(0, 20).map((t, i) => {
+      const dateVal = t.date;
+      const doneVal = t.done;
+      const match = String(dateVal).trim() === todayStr;
+      return '[' + i + '] type=' + t.type + ' | text="' + t.text + '" | date="' + dateVal + '" (' + typeof dateVal + ') | done=' + doneVal + ' (' + typeof doneVal + ') | dateMatch=' + match;
+    }),
+    '',
+    '── PARSED (what frontend uses) ──',
+    ...(parsedTasks ? [
+      ...parsedTasks.priority.map((t,i) => '[P' + i + '] "' + t.text + '" | date=' + t.date + ' | done=' + t.done),
+      ...parsedTasks.scheduled.map((t,i) => '[S' + i + '] "' + t.text + '" | date=' + t.date + ' | done=' + t.done)
+    ] : ['(not available)'])
+  ];
+  out.textContent = lines.join('\n');
+}
+
+// ── SAVE STATUS INDICATOR ──
+function showSaveStatus(status) {
+  const el = document.getElementById('save-status');
+  const msgs = {
+    saving:  '💾 Saving…',
+    saved:   '✅ Saved to Sheet',
+    error:   '⚠️ Save failed',
+    loading: '⏳ Loading…',
+    loaded:  '✅ Loaded'
+  };
+  el.textContent = msgs[status] || '';
+  el.className = 'save-status ' + status;
+  if (status === 'saved' || status === 'loaded') {
+    setTimeout(() => { el.textContent = ''; el.className = 'save-status'; }, 3000);
+  }
+}
+
+// ── HELPERS ──
+function futureDate(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+function setDate() {
+  const d = new Date();
+  document.getElementById('topbar-date').textContent =
+    d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 // ── RENDER ──
-
-// Stats: just show whatever fields exist
-function renderStats() {
-  const stats = state.stats || {};
-  for (const key in stats) {
-    const el = document.getElementById(`stat-${key}`);
-    if (el) el.textContent = stats[key];
-  }
+function render() {
+  renderProjects();
+  renderTasks();
+  renderDeliverables();
+  updateStats();
 }
 
-// Tasks: render everything as-is
-function renderTasks() {
-  const priorityEl = document.getElementById('priority-tasks');
-  const scheduledEl = document.getElementById('scheduled-tasks');
-  priorityEl.innerHTML = '';
-  scheduledEl.innerHTML = '';
-
-  (state.tasks || []).forEach(t => {
-    const row = document.createElement('div');
-    row.className = 'task-row';
-    row.textContent = JSON.stringify(t); // show full raw object
-    if (t.type === 'priority') priorityEl.appendChild(row);
-    else scheduledEl.appendChild(row);
-  });
+function deadlineStr(d) {
+  if (!d) return '—';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(d);
+  const diff = Math.round((due - today) / 86400000);
+  const fmt = due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  if (diff < 0) return `<span class="deadline overdue">${fmt} (overdue)</span>`;
+  if (diff <= 3) return `<span class="deadline soon">${fmt} (${diff}d)</span>`;
+  return `<span class="deadline">${fmt}</span>`;
 }
 
-// Projects: render everything as-is
+function avatarColor(name) {
+  const colors = ['#D4621A','#2E7D52','#1E5FA8','#6D3FA0','#C0392B','#B45309'];
+  let h = 0; for (let c of name) h = (h * 31 + c.charCodeAt(0)) % colors.length;
+  return colors[h];
+}
+
 function renderProjects() {
   const tb = document.getElementById('project-tbody');
   tb.innerHTML = '';
-  (state.projects || []).forEach(p => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${JSON.stringify(p)}</td>`; // raw object in one cell
-    tb.appendChild(tr);
-  });
+  const visible = state.projects.filter(p => p.status !== 'done');
+  if (visible.length === 0) {
+    tb.innerHTML = `<tr><td colspan="5" style="padding:16px;text-align:center;font-size:12px;color:var(--text-muted)">🎉 All projects complete! Add a new one to get started.</td></tr>`;
+  } else {
+    visible.forEach((p) => {
+      const i = state.projects.indexOf(p);
+      const prog = parseInt(p.progress) || 0;
+      tb.innerHTML += `
+        <tr>
+          <td><div class="project-name" contenteditable="true"
+                onblur="state.projects[${i}].name=this.textContent;updateStats();scheduleSave()">${p.name}</div>
+              <small contenteditable="true"
+                onblur="state.projects[${i}].desc=this.textContent;scheduleSave()">${p.desc}</small></td>
+          <td>
+            <select onchange="state.projects[${i}].status=this.value;renderProjects();updateStats();scheduleSave()"
+              style="border:none;background:transparent;font-family:inherit;font-size:12px;cursor:pointer;padding:2px">
+              ${['planning','active','review','blocked','done'].map(s =>
+                `<option value="${s}" ${p.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
+            </select>
+          </td>
+          <td><span class="priority-dot ${p.priority}"></span>
+              <span style="font-size:12px;margin-left:4px">${p.priority.charAt(0).toUpperCase()+p.priority.slice(1)}</span></td>
+          <td>${deadlineStr(p.deadline)}</td>
+          <td>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar"><div class="progress-bar-fill" style="width:${prog}%"></div></div>
+              <div class="progress-label" contenteditable="true"
+                onblur="state.projects[${i}].progress=parseInt(this.textContent)||0;renderProjects();scheduleSave()">${prog}%</div>
+            </div>
+          </td>
+        </tr>`;
+    });
+  }
 }
 
-// Deliverables: render everything as-is
+function renderTasks() {
+  ['priority','scheduled'].forEach(type => {
+    const container = document.getElementById(type === 'priority' ? 'priority-tasks' : 'scheduled-tasks');
+    container.innerHTML = '';
+    // Only show tasks that are NOT done
+    // state.tasks only contains today's undone tasks — Apps Script filtered them
+    const visible = state.tasks[type];
+    if (visible.length === 0) {
+      container.innerHTML = `<div style="padding:12px 0;font-size:12px;color:var(--text-muted);text-align:center;">
+        ${type === 'priority' ? '🎉 All priority tasks done!' : '✅ Nothing scheduled — add a task'}</div>`;
+    } else {
+      visible.forEach((t) => {
+        // Use original index in state array for save reference
+        const originalIndex = state.tasks[type].indexOf(t);
+        const div = document.createElement('div');
+        div.className = 'task-row';
+        div.innerHTML = `
+          <div class="task-check" onclick="toggleTask('${type}',${originalIndex})"></div>
+          <div class="task-text" contenteditable="true"
+            onblur="state.tasks['${type}'][${originalIndex}].text=this.textContent;scheduleSave()">${t.text}</div>
+          <span class="task-tag tag-${t.priority}">${t.priority.toUpperCase()}</span>`;
+        container.appendChild(div);
+      });
+    }
+  });
+  updateStats();
+}
+
 function renderDeliverables() {
   const tb = document.getElementById('deliverable-tbody');
   tb.innerHTML = '';
-  (state.deliverables || []).forEach(d => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${JSON.stringify(d)}</td>`; // raw object in one cell
-    tb.appendChild(tr);
+  const visible = state.deliverables.filter(d => d.status !== 'done');
+  if (visible.length === 0) {
+    tb.innerHTML = `<tr><td colspan="5" style="padding:16px;text-align:center;font-size:12px;color:var(--text-muted)">✅ All deliverables delivered! Add new ones as they come in.</td></tr>`;
+  } else {
+    visible.forEach((d) => {
+      const i = state.deliverables.indexOf(d);
+      const initials = d.stakeholder.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const color = avatarColor(d.stakeholder);
+      tb.innerHTML += `
+        <tr>
+          <td>
+            <div class="stakeholder-name-cell">
+              <div class="avatar" style="background:${color}">${initials}</div>
+              <span contenteditable="true"
+                onblur="state.deliverables[${i}].stakeholder=this.textContent;renderDeliverables();scheduleSave()">${d.stakeholder}</span>
+            </div>
+          </td>
+          <td><span class="deliverable-tag" contenteditable="true"
+                onblur="state.deliverables[${i}].name=this.textContent;scheduleSave()">${d.name}</span></td>
+          <td>${deadlineStr(d.due)}</td>
+          <td>
+            <select onchange="state.deliverables[${i}].status=this.value;renderDeliverables();scheduleSave()"
+              style="border:none;background:transparent;font-family:inherit;font-size:12px;cursor:pointer;padding:2px">
+              ${['planning','active','review','blocked','done'].map(s =>
+                `<option value="${s}" ${d.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
+            </select>
+          </td>
+          <td style="color:var(--text-muted);font-size:12px" contenteditable="true"
+            onblur="state.deliverables[${i}].notes=this.textContent;scheduleSave()">${d.notes}</td>
+        </tr>`;
+    });
+  }
+}
+
+function toggleTask(type, i) {
+  state.tasks[type][i].done = true;
+  scheduleSave();
+  renderTasks();
+}
+
+function updateStats() {
+  // Only count non-done projects and deliverables
+  const active = state.projects.filter(p => p.status === 'active').length;
+  document.getElementById('stat-active').textContent = active;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7);
+  const dueWeek = [
+    ...state.projects.filter(p => p.status !== 'done'),
+    ...state.deliverables.filter(d => d.status !== 'done')
+  ].filter(p => {
+    const d = new Date(p.deadline || p.due);
+    return d >= today && d <= weekEnd;
+  }).length;
+  document.getElementById('stat-week').textContent = dueWeek;
+  // state only contains today's tasks (Apps Script filtered) — just count them
+  const allTasks = [...state.tasks.priority, ...state.tasks.scheduled];
+  document.getElementById('stat-tasks').textContent = allTasks.length;
+  document.getElementById('stat-done').textContent = 0; // done tasks are hidden from state
+  const urgent = state.projects.filter(p => {
+    if (p.status === 'done') return false;
+    const d = new Date(p.deadline); const diff = Math.round((d - today) / 86400000);
+    return diff <= 0 || p.status === 'blocked';
+  }).length;
+  document.getElementById('sb-urgent').textContent = urgent;
+}
+
+// ── MODAL ──
+let currentModal = null;
+function openModal(type) {
+  document.getElementById('modal-overlay').classList.add('open');
+  ['project','task','deliverable'].forEach(t => {
+    document.getElementById('modal-' + t).style.display = t === type ? 'block' : 'none';
   });
+  currentModal = type;
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  currentModal = null;
+}
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
 }
 
-// Notes: just show last note as-is
-function renderNotes() {
-  const notesEl = document.getElementById('daily-notes');
-  const notes = state.notes || [];
-  if (notes.length > 0) notesEl.value = JSON.stringify(notes[notes.length-1]);
+function addProject() {
+  const name = document.getElementById('p-name').value.trim();
+  if (!name) return;
+  state.projects.push({
+    name,
+    desc: document.getElementById('p-desc').value || '',
+    status: document.getElementById('p-status').value,
+    priority: document.getElementById('p-priority').value,
+    deadline: document.getElementById('p-deadline').value || futureDate(14),
+    progress: parseInt(document.getElementById('p-progress').value) || 0
+  });
+  closeModal();
+  render();
+  scheduleSave();
+  ['p-name','p-desc','p-deadline','p-progress'].forEach(id => document.getElementById(id).value = '');
 }
 
-// Save status
-function showSaveStatus(status) {
-  const el = document.getElementById('save-status');
-  const msgs = { loading: '⏳ Loading…', loaded: '✅ Loaded', error: '⚠️ Load failed' };
-  el.textContent = msgs[status] || '';
-  el.className = 'save-status ' + status;
-  if (status === 'loaded') setTimeout(() => { el.textContent=''; el.className='save-status'; }, 3000);
+function addTask() {
+  const text = document.getElementById('t-name').value.trim();
+  if (!text) return;
+  const type = document.getElementById('t-type').value;
+  const today = new Date().toISOString().split('T')[0];
+  state.tasks[type].push({ text, priority: document.getElementById('t-priority').value, done: false, date: today });
+  closeModal();
+  render();
+  scheduleSave();
+  document.getElementById('t-name').value = '';
 }
 
-// Date
-function setDate() {
-  const d = new Date();
-  const el = document.getElementById('topbar-date');
-  if (el) el.textContent = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+function addDeliverable() {
+  const stakeholder = document.getElementById('d-stakeholder').value.trim();
+  const name = document.getElementById('d-name').value.trim();
+  if (!stakeholder || !name) return;
+  state.deliverables.push({
+    stakeholder,
+    name,
+    due: document.getElementById('d-due').value || futureDate(7),
+    status: document.getElementById('d-status').value,
+    notes: document.getElementById('d-notes').value || ''
+  });
+  closeModal();
+  render();
+  scheduleSave();
+  ['d-stakeholder','d-name','d-due','d-notes'].forEach(id => document.getElementById(id).value = '');
 }
 
-// INITIAL LOAD
+// ── INIT ──
 setDate();
 loadFromSheet();
-</script>
 
+document.getElementById('daily-notes').addEventListener('input', function() {
+  scheduleSave();
+});
+</script>
 </body>
 </html>
