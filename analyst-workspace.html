@@ -602,7 +602,6 @@
     <div class="sidebar-item" onclick="openModal('project')"><span class="icon">➕</span> Add Project</div>
     <div class="sidebar-item" onclick="openModal('task')"><span class="icon">✏️</span> Add Task</div>
     <div class="sidebar-item" onclick="openModal('deliverable')"><span class="icon">📌</span> Add Deliverable</div>
-    <div class="sidebar-item" onclick="toggleDebug()"><span class="icon">🔍</span> Debug Panel</div>
   </div>
 </aside>
 
@@ -711,12 +710,6 @@
         </table>
         <div class="add-row" onclick="openModal('deliverable')">+ New deliverable</div>
       </div>
-    </div>
-
-    <!-- DEBUG PANEL -->
-    <div class="section" id="debug-section" style="display:none">
-      <div class="section-title">🔍 Debug — Raw Sheet Data</div>
-      <div style="background:#1A1917;color:#E8E5DF;padding:16px;border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre-wrap;" id="debug-output">Loading...</div>
     </div>
 
     <!-- NOTES -->
@@ -836,14 +829,14 @@ const DEFAULT_STATE = {
   ],
   tasks: {
     priority: [
-      { text: "Finalise churn report slides", priority: "p1", done: false, date: new Date().toISOString().split('T')[0] },
-      { text: "Send updated dashboard link to CEO", priority: "p1", done: false, date: new Date().toISOString().split('T')[0] },
-      { text: "Fix null values in Q2 sales data", priority: "p2", done: false, date: new Date().toISOString().split('T')[0] },
+      { text: "Finalise churn report slides", priority: "p1", done: false },
+      { text: "Send updated dashboard link to CEO", priority: "p1", done: false },
+      { text: "Fix null values in Q2 sales data", priority: "p2", done: false },
     ],
     scheduled: [
-      { text: "Team standup at 10am", priority: "p3", done: false, date: new Date().toISOString().split('T')[0] },
-      { text: "Review ETL script PR", priority: "p2", done: false, date: new Date().toISOString().split('T')[0] },
-      { text: "Write documentation for pipeline", priority: "p3", done: false, date: new Date().toISOString().split('T')[0] },
+      { text: "Team standup at 10am", priority: "p3", done: false },
+      { text: "Review ETL script PR", priority: "p2", done: false },
+      { text: "Write documentation for pipeline", priority: "p3", done: false },
     ]
   },
   deliverables: [
@@ -867,25 +860,18 @@ function scheduleSave() {
 async function saveToSheet() {
   if (APPS_SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return;
   try {
-    // Merge today's state tasks with the full historical cache
-    // so we never wipe old rows from the sheet
-    const todayTasks = [
-      ...state.tasks.priority.map(t => ({ type: 'priority', text: t.text, priority: t.priority, done: t.done, date: t.date || '' })),
-      ...state.tasks.scheduled.map(t => ({ type: 'scheduled', text: t.text, priority: t.priority, done: t.done, date: t.date || '' }))
+    // Flatten tasks for saving
+    const allTasks = [
+      ...state.tasks.priority.map(t => ({ ...t, type: 'priority' })),
+      ...state.tasks.scheduled.map(t => ({ ...t, type: 'scheduled' }))
     ];
-    // allTasksCache holds every task ever loaded — historical + today
-    // Replace today's rows with current state, keep all other days intact
     const today = new Date().toISOString().split('T')[0];
-    const historicalTasks = state._allTasksCache
-      ? state._allTasksCache.filter(t => t.date !== today)
-      : [];
-    const allTasks = [...historicalTasks, ...todayTasks];
-
     const notesContent = document.getElementById('daily-notes').value;
+
     const payload = {
-      projects: [...state.projects, ...(state._doneProjectsCache || [])],
+      projects: state.projects,
       tasks: allTasks,
-      deliverables: [...state.deliverables, ...(state._doneDeliverablesCache || [])],
+      deliverables: state.deliverables,
       notes: [{ date: today, content: notesContent }]
     };
 
@@ -917,46 +903,31 @@ async function loadFromSheet() {
     if (json.success && json.data) {
       const d = json.data;
 
-
-
-      // ── Cache ALL raw data before filtering — needed for safe saves ──
-      const rawTasks        = d.tasks || [];
-      const rawProjects     = d.projects || [];
-      const rawDeliverables = d.deliverables || [];
-
-      // Keep historical tasks cache (all tasks from sheet)
-      state._allTasksCache = rawTasks.map(t => ({
-        type: t.type, text: t.text, priority: t.priority, done: t.done, date: t.date || ''
-      }));
-
-      // Keep done projects and deliverables cache so saves don't wipe them
-      state._doneProjectsCache     = rawProjects.filter(p => p.status === 'done');
-      state._doneDeliverablesCache = rawDeliverables.filter(d => d.status === 'done');
-
-      // ── Tasks: show=true set by Apps Script (today + not done) ──
-      state.tasks = {
-        priority:  rawTasks.filter(t => t.type === 'priority'  && t.show === true),
-        scheduled: rawTasks.filter(t => t.type === 'scheduled' && t.show === true)
-      };
-
-      // ── Projects: show=true set by Apps Script (not done) ──
-      state.projects = rawProjects.filter(p => p.show === true).map(p => ({
+      // Projects
+      state.projects = (d.projects || []).map(p => ({
         ...p,
         progress: parseInt(p.progress) || 0
       }));
 
-      // ── Deliverables: show=true set by Apps Script (not done) ──
-      state.deliverables = rawDeliverables.filter(dv => dv.show === true);
+      // Tasks — split back into priority/scheduled
+      const rawTasks = d.tasks || [];
+      state.tasks = {
+        priority:  rawTasks.filter(t => t.type === 'priority').map(({type, ...rest}) => ({...rest, done: rest.done === true || rest.done === 'true'})),
+        scheduled: rawTasks.filter(t => t.type === 'scheduled').map(({type, ...rest}) => ({...rest, done: rest.done === true || rest.done === 'true'}))
+      };
 
-      // ── Debug ──
-      updateDebug(rawTasks, d.today || '', state.tasks);
+      // Deliverables
+      state.deliverables = d.deliverables || [];
 
-
-
-      // ── Notes ──
+      // Notes
       if (d.notes && d.notes.length > 0) {
         const latest = d.notes[d.notes.length - 1];
         document.getElementById('daily-notes').value = latest.content || '';
+      }
+
+      // If sheet is empty on first load, use sample data
+      if (state.projects.length === 0 && state.tasks.priority.length === 0) {
+        state = JSON.parse(JSON.stringify(DEFAULT_STATE));
       }
 
       showSaveStatus('loaded');
@@ -966,38 +937,6 @@ async function loadFromSheet() {
     state = JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
   render();
-}
-
-// ── DEBUG ──
-function toggleDebug() {
-  const panel = document.getElementById('debug-section');
-  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-}
-
-function updateDebug(rawTasks, todayStr, parsedTasks) {
-  const out = document.getElementById('debug-output');
-  if (!out) return;
-  const lines = [
-    '📅 todayStr = ' + todayStr,
-    '📦 rawTasks from sheet = ' + rawTasks.length,
-    '✅ priority tasks loaded for today = ' + (parsedTasks ? parsedTasks.priority.length : '?'),
-    '✅ scheduled tasks loaded for today = ' + (parsedTasks ? parsedTasks.scheduled.length : '?'),
-    '',
-    '── RAW (as received from sheet) ──',
-    ...rawTasks.slice(0, 20).map((t, i) => {
-      const dateVal = t.date;
-      const doneVal = t.done;
-      const match = String(dateVal).trim() === todayStr;
-      return '[' + i + '] type=' + t.type + ' | text="' + t.text + '" | date="' + dateVal + '" (' + typeof dateVal + ') | done=' + doneVal + ' (' + typeof doneVal + ') | dateMatch=' + match;
-    }),
-    '',
-    '── PARSED (what frontend uses) ──',
-    ...(parsedTasks ? [
-      ...parsedTasks.priority.map((t,i) => '[P' + i + '] "' + t.text + '" | date=' + t.date + ' | done=' + t.done),
-      ...parsedTasks.scheduled.map((t,i) => '[S' + i + '] "' + t.text + '" | date=' + t.date + ' | done=' + t.done)
-    ] : ['(not available)'])
-  ];
-  out.textContent = lines.join('\n');
 }
 
 // ── SAVE STATUS INDICATOR ──
@@ -1098,8 +1037,7 @@ function renderTasks() {
     const container = document.getElementById(type === 'priority' ? 'priority-tasks' : 'scheduled-tasks');
     container.innerHTML = '';
     // Only show tasks that are NOT done
-    // state.tasks only contains today's undone tasks — Apps Script filtered them
-    const visible = state.tasks[type];
+    const visible = state.tasks[type].filter(t => !t.done && t.done !== 'true' && t.done !== true);
     if (visible.length === 0) {
       container.innerHTML = `<div style="padding:12px 0;font-size:12px;color:var(--text-muted);text-align:center;">
         ${type === 'priority' ? '🎉 All priority tasks done!' : '✅ Nothing scheduled — add a task'}</div>`;
@@ -1159,15 +1097,7 @@ function renderDeliverables() {
 }
 
 function toggleTask(type, i) {
-  const task = state.tasks[type][i];
-  task.done = true;
-  // Update the cache too so the save reflects the tick
-  if (state._allTasksCache) {
-    const cached = state._allTasksCache.find(t => t.text === task.text && t.type === type && t.date === task.date);
-    if (cached) cached.done = true;
-  }
-  // Remove from visible state immediately
-  state.tasks[type].splice(i, 1);
+  state.tasks[type][i].done = true;
   scheduleSave();
   renderTasks();
 }
@@ -1186,10 +1116,11 @@ function updateStats() {
     return d >= today && d <= weekEnd;
   }).length;
   document.getElementById('stat-week').textContent = dueWeek;
-  // state only contains today's tasks (Apps Script filtered) — just count them
   const allTasks = [...state.tasks.priority, ...state.tasks.scheduled];
-  document.getElementById('stat-tasks').textContent = allTasks.length;
-  document.getElementById('stat-done').textContent = 0; // done tasks are hidden from state
+  const todayTasks = allTasks.filter(t => t.done !== true && t.done !== 'true');
+  const doneTasks  = allTasks.filter(t => t.done === true || t.done === 'true');
+  document.getElementById('stat-tasks').textContent = todayTasks.length;
+  document.getElementById('stat-done').textContent = doneTasks.length;
   const urgent = state.projects.filter(p => {
     if (p.status === 'done') return false;
     const d = new Date(p.deadline); const diff = Math.round((d - today) / 86400000);
@@ -1236,8 +1167,7 @@ function addTask() {
   const text = document.getElementById('t-name').value.trim();
   if (!text) return;
   const type = document.getElementById('t-type').value;
-  const today = new Date().toISOString().split('T')[0];
-  state.tasks[type].push({ text, priority: document.getElementById('t-priority').value, done: false, date: today });
+  state.tasks[type].push({ text, priority: document.getElementById('t-priority').value, done: false });
   closeModal();
   render();
   scheduleSave();
