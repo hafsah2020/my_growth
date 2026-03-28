@@ -1,6 +1,128 @@
-<script>
-const APPS_SCRIPT_URL = 'YOUR_WEB_APP_URL_HERE';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raw Apps Script Data Viewer</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 0;
+  }
 
+  header {
+    background: #222;
+    color: #fff;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  main {
+    padding: 1rem;
+  }
+
+  h2 {
+    margin-top: 2rem;
+    font-size: 1.2rem;
+    color: #333;
+  }
+
+  .task-row {
+    background: #fff;
+    padding: 0.5rem;
+    margin-bottom: 0.2rem;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+  }
+
+  table td, table th {
+    border: 1px solid #ccc;
+    padding: 0.4rem;
+    font-family: monospace;
+    font-size: 0.85rem;
+  }
+
+  #daily-notes {
+    width: 100%;
+    height: 150px;
+    margin-top: 0.5rem;
+    font-family: monospace;
+  }
+
+  .save-status {
+    font-size: 0.9rem;
+    font-weight: bold;
+  }
+
+  .save-status.loading { color: orange; }
+  .save-status.loaded { color: green; }
+  .save-status.error { color: red; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div>Raw Apps Script Data Viewer</div>
+  <div id="topbar-date"></div>
+</header>
+
+<main>
+  <div class="save-status" id="save-status"></div>
+
+  <!-- STATS -->
+  <h2>Stats</h2>
+  <div id="stats-container">
+    <div>Priority Tasks: <span id="stat-priority"></span></div>
+    <div>Scheduled Tasks: <span id="stat-scheduled"></span></div>
+    <div>Projects: <span id="stat-projects"></span></div>
+    <div>Deliverables: <span id="stat-deliverables"></span></div>
+  </div>
+
+  <!-- TASKS -->
+  <h2>Priority Tasks</h2>
+  <div id="priority-tasks"></div>
+
+  <h2>Scheduled Tasks</h2>
+  <div id="scheduled-tasks"></div>
+
+  <!-- PROJECTS -->
+  <h2>Projects</h2>
+  <table>
+    <thead>
+      <tr><th>Raw Project Data</th></tr>
+    </thead>
+    <tbody id="project-tbody"></tbody>
+  </table>
+
+  <!-- DELIVERABLES -->
+  <h2>Deliverables</h2>
+  <table>
+    <thead>
+      <tr><th>Raw Deliverable Data</th></tr>
+    </thead>
+    <tbody id="deliverable-tbody"></tbody>
+  </table>
+
+  <!-- NOTES -->
+  <h2>Last Note</h2>
+  <textarea id="daily-notes" readonly></textarea>
+</main>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9uygWsXQ-1w3fxmIxPaLkjOY8Ot_PNdh5aj0i0mEJWDV4Pyt9Y_piHMforupr8GjV6A/exec'; // replace with your Apps Script web app URL
 let state = {};
 
 // Load everything from Apps Script
@@ -26,6 +148,7 @@ async function loadFromSheet() {
     }
   } catch (e) {
     showSaveStatus('error');
+    console.error(e);
   }
 }
 
@@ -105,3 +228,6 @@ function setDate() {
 setDate();
 loadFromSheet();
 </script>
+
+</body>
+</html>
