@@ -912,8 +912,26 @@ async function loadFromSheet() {
       // Tasks — split back into priority/scheduled
       const rawTasks = d.tasks || [];
       const todayStr = new Date().toISOString().split('T')[0];
-      const parseDone = v => v === true || v === 'true' || v === 'TRUE';
-      const parseDate = v => (v && String(v).trim()) ? String(v).trim().slice(0, 10) : '';
+
+      const parseDone = v => {
+        if (v === true) return true;
+        if (typeof v === 'string') return v.toUpperCase() === 'TRUE';
+        return false;
+      };
+
+      const parseDate = v => {
+        if (!v && v !== 0) return '';
+        const s = String(v).trim();
+        // Google Sheets sometimes returns a date serial number — convert it
+        if (/^\d{5}$/.test(s)) {
+          // Excel/Sheets serial: days since 1899-12-30
+          const d = new Date(Math.round((parseFloat(s) - 25569) * 86400 * 1000));
+          return d.toISOString().split('T')[0];
+        }
+        // Already a string date — normalise separators and take first 10 chars
+        return s.replace(/\//g, '-').slice(0, 10);
+      };
+
       state.tasks = {
         priority:  rawTasks.filter(t => t.type === 'priority').map(({type, ...rest}) => ({
           ...rest,
@@ -926,7 +944,8 @@ async function loadFromSheet() {
           date: parseDate(rest.date)
         }))
       };
-      // Auto-mark tasks from previous days as done (keeps Sheet history, hides from view)
+
+      // Hide tasks from previous days — mark done so Sheet keeps them as history
       ['priority','scheduled'].forEach(type => {
         state.tasks[type].forEach(t => {
           if (t.date !== todayStr) t.done = true;
