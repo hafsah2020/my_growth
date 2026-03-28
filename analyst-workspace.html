@@ -851,14 +851,14 @@ const DEFAULT_STATE = {
 let saveTimer = null;
 
 function scheduleSave() {
-  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbz9uygWsXQ-1w3fxmIxPaLkjOY8Ot_PNdh5aj0i0mEJWDV4Pyt9Y_piHMforupr8GjV6A/exec') return; // not set up yet
+  if (APPS_SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return; // not set up yet
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveToSheet, 1500); // debounce — saves 1.5s after last change
   showSaveStatus('saving');
 }
 
 async function saveToSheet() {
-  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbz9uygWsXQ-1w3fxmIxPaLkjOY8Ot_PNdh5aj0i0mEJWDV4Pyt9Y_piHMforupr8GjV6A/exec') return;
+  if (APPS_SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return;
   try {
     // Flatten tasks for saving
     const allTasks = [
@@ -888,7 +888,7 @@ async function saveToSheet() {
 }
 
 async function loadFromSheet() {
-  if (APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbz9uygWsXQ-1w3fxmIxPaLkjOY8Ot_PNdh5aj0i0mEJWDV4Pyt9Y_piHMforupr8GjV6A/exec') {
+  if (APPS_SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') {
     // No URL set — load sample data
     state = JSON.parse(JSON.stringify(DEFAULT_STATE));
     render();
