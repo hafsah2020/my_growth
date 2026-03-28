@@ -602,6 +602,7 @@
     <div class="sidebar-item" onclick="openModal('project')"><span class="icon">➕</span> Add Project</div>
     <div class="sidebar-item" onclick="openModal('task')"><span class="icon">✏️</span> Add Task</div>
     <div class="sidebar-item" onclick="openModal('deliverable')"><span class="icon">📌</span> Add Deliverable</div>
+    <div class="sidebar-item" onclick="toggleDebug()"><span class="icon">🔍</span> Debug Panel</div>
   </div>
 </aside>
 
@@ -710,6 +711,12 @@
         </table>
         <div class="add-row" onclick="openModal('deliverable')">+ New deliverable</div>
       </div>
+    </div>
+
+    <!-- DEBUG PANEL -->
+    <div class="section" id="debug-section" style="display:none">
+      <div class="section-title">🔍 Debug — Raw Sheet Data</div>
+      <div style="background:#1A1917;color:#E8E5DF;padding:16px;border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;overflow-x:auto;white-space:pre-wrap;" id="debug-output">Loading...</div>
     </div>
 
     <!-- NOTES -->
@@ -912,6 +919,7 @@ async function loadFromSheet() {
       // Tasks — split back into priority/scheduled
       const rawTasks = d.tasks || [];
       const todayStr = new Date().toISOString().split('T')[0];
+      updateDebug(rawTasks, todayStr);
 
       const parseDone = v => {
         if (v === true) return true;
@@ -973,6 +981,29 @@ async function loadFromSheet() {
     state = JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
   render();
+}
+
+// ── DEBUG ──
+function toggleDebug() {
+  const panel = document.getElementById('debug-section');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateDebug(rawTasks, todayStr) {
+  const out = document.getElementById('debug-output');
+  if (!out) return;
+  const lines = [
+    '📅 todayStr = ' + todayStr,
+    '📦 rawTasks count = ' + rawTasks.length,
+    '',
+    ...rawTasks.slice(0, 20).map((t, i) => {
+      const dateVal = t.date;
+      const doneVal = t.done;
+      const match = String(dateVal) === todayStr;
+      return `[${i}] type=${t.type} | text="${t.text}" | date="${dateVal}" (type:${typeof dateVal}) | done="${doneVal}" (type:${typeof doneVal}) | dateMatch=${match}`;
+    })
+  ];
+  out.textContent = lines.join('\n');
 }
 
 // ── SAVE STATUS INDICATOR ──
