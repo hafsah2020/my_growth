@@ -867,18 +867,25 @@ function scheduleSave() {
 async function saveToSheet() {
   if (APPS_SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return;
   try {
-    // Flatten tasks — field order must match Sheet columns: type, text, priority, done, date
-    const allTasks = [
+    // Merge today's state tasks with the full historical cache
+    // so we never wipe old rows from the sheet
+    const todayTasks = [
       ...state.tasks.priority.map(t => ({ type: 'priority', text: t.text, priority: t.priority, done: t.done, date: t.date || '' })),
       ...state.tasks.scheduled.map(t => ({ type: 'scheduled', text: t.text, priority: t.priority, done: t.done, date: t.date || '' }))
     ];
+    // allTasksCache holds every task ever loaded — historical + today
+    // Replace today's rows with current state, keep all other days intact
     const today = new Date().toISOString().split('T')[0];
-    const notesContent = document.getElementById('daily-notes').value;
+    const historicalTasks = state._allTasksCache
+      ? state._allTasksCache.filter(t => t.date !== today)
+      : [];
+    const allTasks = [...historicalTasks, ...todayTasks];
 
+    const notesContent = document.getElementById('daily-notes').value;
     const payload = {
-      projects: state.projects,
+      projects: [...state.projects, ...(state._doneProjectsCache || [])],
       tasks: allTasks,
-      deliverables: state.deliverables,
+      deliverables: [...state.deliverables, ...(state._doneDeliverablesCache || [])],
       notes: [{ date: today, content: notesContent }]
     };
 
@@ -912,21 +919,34 @@ async function loadFromSheet() {
 
 
 
-      // ── Tasks: Apps Script sets show=true for today's undone tasks ──
-      const rawTasks = d.tasks || [];
+      // ── Cache ALL raw data before filtering — needed for safe saves ──
+      const rawTasks        = d.tasks || [];
+      const rawProjects     = d.projects || [];
+      const rawDeliverables = d.deliverables || [];
+
+      // Keep historical tasks cache (all tasks from sheet)
+      state._allTasksCache = rawTasks.map(t => ({
+        type: t.type, text: t.text, priority: t.priority, done: t.done, date: t.date || ''
+      }));
+
+      // Keep done projects and deliverables cache so saves don't wipe them
+      state._doneProjectsCache     = rawProjects.filter(p => p.status === 'done');
+      state._doneDeliverablesCache = rawDeliverables.filter(d => d.status === 'done');
+
+      // ── Tasks: show=true set by Apps Script (today + not done) ──
       state.tasks = {
         priority:  rawTasks.filter(t => t.type === 'priority'  && t.show === true),
         scheduled: rawTasks.filter(t => t.type === 'scheduled' && t.show === true)
       };
 
-      // ── Projects: Apps Script sets show=true for non-done projects ──
-      state.projects = (d.projects || []).filter(p => p.show === true).map(p => ({
+      // ── Projects: show=true set by Apps Script (not done) ──
+      state.projects = rawProjects.filter(p => p.show === true).map(p => ({
         ...p,
         progress: parseInt(p.progress) || 0
       }));
 
-      // ── Deliverables: Apps Script sets show=true for non-done deliverables ──
-      state.deliverables = (d.deliverables || []).filter(d => d.show === true);
+      // ── Deliverables: show=true set by Apps Script (not done) ──
+      state.deliverables = rawDeliverables.filter(dv => dv.show === true);
 
       // ── Debug ──
       updateDebug(rawTasks, d.today || '', state.tasks);
@@ -1139,7 +1159,15 @@ function renderDeliverables() {
 }
 
 function toggleTask(type, i) {
-  state.tasks[type][i].done = true;
+  const task = state.tasks[type][i];
+  task.done = true;
+  // Update the cache too so the save reflects the tick
+  if (state._allTasksCache) {
+    const cached = state._allTasksCache.find(t => t.text === task.text && t.type === type && t.date === task.date);
+    if (cached) cached.done = true;
+  }
+  // Remove from visible state immediately
+  state.tasks[type].splice(i, 1);
   scheduleSave();
   renderTasks();
 }
