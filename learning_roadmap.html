@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Strategy Roadmap</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:#f7f6f3;--surface:#ffffff;--surface2:#f1efea;--border:#e8e4dc;
+    --text-primary:#1a1916;--text-secondary:#6b6860;--text-muted:#a39f97;
+    --accent-orange:#e8621a;--accent-green:#2d7d52;--accent-blue:#2563a8;
+    --accent-purple:#6b41b8;--accent-red:#c53030;--accent-teal:#1a7a8a;--accent-gold:#b07d1a;
+    --tag-bg:#ede9e0;--callout-bg:#fef9f0;--callout-border:#f5c842;--code-bg:#f0ede6;
+    --radius:6px;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 16px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text-primary);min-height:100vh;font-size:14px;line-height:1.7;}
+  .page-wrap{max-width:860px;margin:0 auto;padding:0 24px 120px;}
+
+  /* LOADER */
+  .loader-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;gap:16px;}
+  .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent-orange);border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loader-text{font-family:'DM Mono',monospace;font-size:13px;color:var(--text-muted);}
+
+  /* ERROR */
+  .error-box{background:#fff5f5;border:1px solid #fca5a5;border-left:4px solid var(--accent-red);border-radius:var(--radius);padding:20px 24px;margin:40px 0;}
+  .error-box h3{color:var(--accent-red);font-size:15px;margin-bottom:8px;}
+  .error-box p{color:var(--text-secondary);font-size:13px;line-height:1.8;}
+  .error-box code{font-family:'DM Mono',monospace;background:var(--code-bg);padding:2px 6px;border-radius:3px;font-size:12px;}
+
+  /* HEADER */
+  .page-header{padding:72px 0 40px;border-bottom:1px solid var(--border);margin-bottom:40px;animation:fadeUp .5s ease both;}
+  .page-emoji{font-size:52px;margin-bottom:16px;display:block;}
+  .page-title{font-family:'Instrument Serif',serif;font-size:42px;line-height:1.15;letter-spacing:-.5px;margin-bottom:8px;}
+  .page-subtitle{font-size:16px;color:var(--text-secondary);font-weight:300;margin-bottom:24px;}
+  .page-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;}
+  .meta-tag{display:inline-flex;align-items:center;gap:5px;background:var(--tag-bg);border:1px solid var(--border);padding:4px 10px;border-radius:20px;font-size:12px;color:var(--text-secondary);font-family:'DM Mono',monospace;}
+  .meta-tag.highlight{background:#fff3e8;border-color:#f5a95a;color:var(--accent-orange);font-weight:500;}
+
+  /* PITCH */
+  .pitch-callout{background:var(--callout-bg);border:1px solid var(--callout-border);border-left:4px solid var(--callout-border);border-radius:var(--radius);padding:16px 20px;margin-bottom:36px;font-size:15px;font-style:italic;font-family:'Instrument Serif',serif;animation:fadeUp .5s .1s ease both;}
+  .pitch-callout strong{font-style:normal;color:var(--accent-orange);font-family:'Sora',sans-serif;font-size:13px;font-weight:600;display:block;margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;}
+
+  /* SECTION HEADING */
+  .section-heading{font-family:'Instrument Serif',serif;font-size:22px;margin:48px 0 16px;display:flex;align-items:center;gap:8px;}
+  .section-heading::after{content:'';flex:1;height:1px;background:var(--border);margin-left:8px;}
+
+  /* FRAMEWORKS */
+  .framework-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:48px;animation:fadeUp .5s .15s ease both;}
+  .framework-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);}
+  .framework-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;margin-bottom:8px;}
+  .framework-card.internal .label{color:var(--accent-green);}
+  .framework-card.external .label{color:var(--accent-blue);}
+  .framework-card.functional .label{color:var(--accent-purple);}
+  .framework-card .items{display:flex;flex-wrap:wrap;gap:5px;}
+  .fw-badge{font-size:11px;padding:2px 8px;border-radius:3px;font-family:'DM Mono',monospace;font-weight:500;}
+  .internal .fw-badge{background:#e8f5ee;color:var(--accent-green);}
+  .external .fw-badge{background:#e8f0fb;color:var(--accent-blue);}
+  .functional .fw-badge{background:#f0ebfa;color:var(--accent-purple);}
+
+  /* TIMELINE */
+  .weeks-timeline{display:flex;flex-direction:column;position:relative;}
+  .weeks-timeline::before{content:'';position:absolute;left:22px;top:0;bottom:0;width:1px;background:var(--border);}
+  .week-block{display:flex;gap:20px;align-items:flex-start;padding:4px 0 20px;animation:fadeUp .4s ease both;position:relative;}
+  .week-dot{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'DM Mono',monospace;font-weight:500;flex-shrink:0;z-index:1;border:2px solid;background:var(--surface);}
+  .w1   {border-color:var(--accent-orange);color:var(--accent-orange);}
+  .w2   {border-color:var(--accent-green);color:var(--accent-green);}
+  .w3   {border-color:var(--accent-blue);color:var(--accent-blue);}
+  .w4   {border-color:var(--accent-purple);color:var(--accent-purple);}
+  .w5   {border-color:var(--accent-red);color:var(--accent-red);}
+  .w6   {border-color:var(--accent-gold);color:var(--accent-gold);}
+  .w78  {border-color:var(--accent-teal);color:var(--accent-teal);}
+  .w910 {border-color:var(--accent-purple);color:var(--accent-purple);}
+  .w1112{border-color:var(--accent-green);color:var(--accent-green);}
+
+  .week-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .2s,transform .2s;}
+  .week-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+  .week-card-header{padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+  .week-card-title{font-weight:600;font-size:14px;line-height:1.3;}
+  .week-card-phase{font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:3px;white-space:nowrap;flex-shrink:0;font-weight:500;}
+  .phase-python   {background:#fff3e8;color:var(--accent-orange);}
+  .phase-internal {background:#e8f5ee;color:var(--accent-green);}
+  .phase-external {background:#e8f0fb;color:var(--accent-blue);}
+  .phase-porter   {background:#f0ebfa;color:var(--accent-purple);}
+  .phase-growth   {background:#fde8e8;color:var(--accent-red);}
+  .phase-ai       {background:#fdf5e0;color:var(--accent-gold);}
+  .phase-n8n      {background:#e5f7f9;color:var(--accent-teal);}
+  .phase-dash     {background:#f0ebfa;color:var(--accent-purple);}
+  .phase-portfolio{background:#e8f5ee;color:var(--accent-green);}
+
+  .week-card-body{padding:14px 18px;}
+  .resource-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;font-size:12.5px;color:var(--text-secondary);}
+  .build-list{list-style:none;margin-top:10px;}
+  .build-list li{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;padding:3px 0;}
+  .build-list li::before{content:'✓';color:var(--accent-green);font-weight:700;font-size:11px;margin-top:2px;flex-shrink:0;}
+  .code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text-secondary);margin:10px 0;line-height:1.6;white-space:pre-wrap;}
+
+  /* WEEK SUCCESS METRIC */
+  .week-success{display:flex;align-items:flex-start;gap:10px;background:#f0f9f4;border-top:1px solid #c9e8d7;padding:10px 18px;font-size:12px;color:var(--accent-green);}
+  .week-success .s-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+  .week-success .s-label{font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:2px;opacity:.7;}
+  .week-success .s-text{font-weight:500;line-height:1.5;}
+
+  .portfolio-bar{display:flex;align-items:center;gap:8px;background:var(--surface2);border-top:1px solid var(--border);padding:10px 18px;font-size:11.5px;font-family:'DM Mono',monospace;color:var(--text-secondary);}
+  .portfolio-bar .dot{width:6px;height:6px;border-radius:50%;background:var(--accent-orange);flex-shrink:0;}
+
+  /* DAILY */
+  .daily-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0 40px;animation:fadeUp .4s ease both;}
+  .daily-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow);}
+  .daily-card .time{font-family:'Instrument Serif',serif;font-size:28px;line-height:1;margin-bottom:4px;}
+  .daily-card .unit{font-size:10px;font-family:'DM Mono',monospace;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+  .daily-card .desc{font-size:12px;color:var(--text-secondary);line-height:1.5;}
+  .daily-card.d1{border-top:3px solid var(--accent-blue);}
+  .daily-card.d2{border-top:3px solid var(--accent-orange);}
+  .daily-card.d3{border-top:3px solid var(--accent-green);}
+
+  /* QUICK START */
+  .quickstart{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin:20px 0 40px;box-shadow:var(--shadow);}
+  .quickstart-title{font-size:12px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--accent-orange);font-weight:600;margin-bottom:14px;}
+  .quickstart-days{display:flex;gap:16px;flex-wrap:wrap;}
+  .qs-day{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;}
+  .qs-day .day-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+  .qs-day .day-task{font-size:12.5px;line-height:1.5;}
+
+  /* METRICS */
+  .metrics-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0 40px;}
+  .metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;gap:12px;align-items:flex-start;box-shadow:var(--shadow);}
+  .metric-icon{font-size:22px;line-height:1;flex-shrink:0;}
+  .metric-text .title{font-size:13px;font-weight:600;margin-bottom:2px;}
+  .metric-text .sub{font-size:12px;color:var(--text-secondary);}
+
+  /* TOOLS */
+  .tools-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 40px;}
+  .tool-chip{display:inline-flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);padding:6px 12px;border-radius:20px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text-secondary);box-shadow:var(--shadow);}
+
+  /* FOOTER */
+  .page-footer{border-top:1px solid var(--border);padding-top:28px;margin-top:60px;display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--text-muted);font-family:'DM Mono',monospace;}
+  .salary-badge{background:#fff3e8;border:1px solid #f5a95a;color:var(--accent-orange);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;font-family:'Sora',sans-serif;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+  @media(max-width:600px){
+    .page-title{font-size:28px;}.framework-grid,.daily-grid,.metrics-grid{grid-template-columns:1fr;}
+    .weeks-timeline::before{left:18px;}.week-dot{width:36px;height:36px;font-size:10px;}
+  }
+</style>
+</head>
+<body>
+
+<!--
+  ╔══════════════════════════════════════════════════════════╗
+  ║  ONLY THING YOU NEED TO EDIT IN THIS FILE               ║
+  ║  Paste your deployed Apps Script Web App URL below      ║
+  ╚══════════════════════════════════════════════════════════╝
+-->
+<script>
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwye39pPOzmXww36bLz_dgrHNBX1E7Czg40HIQaxPGQ0r_HhAz_WrZYLeJll72qsG0DpQ/exec";
+</script>
+
+<div class="page-wrap">
+  <div id="loader" class="loader-wrap">
+    <div class="spinner"></div>
+    <p class="loader-text">Loading roadmap from Google Sheets…</p>
+  </div>
+  <div id="content" style="display:none;"></div>
+</div>
+
+<script>
+// ── BOOT ─────────────────────────────────────────────────────
+async function loadRoadmap() {
+  const loader  = document.getElementById('loader');
+  const content = document.getElementById('content');
+  try {
+    const res = await fetch(APPS_SCRIPT_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    content.innerHTML = buildPage(data);
+    loader.style.display  = 'none';
+    content.style.display = 'block';
+    document.querySelectorAll('.week-block').forEach((el, i) => {
+      el.style.animationDelay = `${0.05 + i * 0.05}s`;
+    });
+  } catch (err) {
+    loader.style.display = 'none';
+    content.style.display = 'block';
+    content.innerHTML = `
+      <div class="error-box">
+        <h3>⚠️ Could not load roadmap data</h3>
+        <p><strong>Step 1:</strong> In Apps Script, run <code>setupDefaultData()</code> to create all sheet tabs with default data.</p>
+        <p><strong>Step 2:</strong> Deploy → <em>New deployment</em> → Web App → Execute as <em>Me</em> → Access <em>Anyone</em> → Copy the URL.</p>
+        <p><strong>Step 3:</strong> Paste that URL into <code>APPS_SCRIPT_URL</code> at the top of this HTML file.</p>
+        <p style="margin-top:12px;font-family:'DM Mono',monospace;font-size:11px;color:#aaa;">Debug: ${esc(err.message)}</p>
+      </div>`;
+  }
+}
+
+// ── PAGE ─────────────────────────────────────────────────────
+function buildPage(d) {
+  const c = d.config || {};
+  return buildHeader(c)
+    + buildPitch(c)
+    + buildFrameworks(c)
+    + buildWeeks(d.weeks || [])
+    + buildDailySchedule()
+    + buildQuickStart(d.quickStart || [])
+    + buildMetrics(d.metrics || [])
+    + buildTools(c)
+    + buildFooter(c);
+}
+
+// ── HEADER ───────────────────────────────────────────────────
+function buildHeader(c) {
+  const tags = (c.tags || []).map((t, i) =>
+    `<span class="meta-tag${i === (c.tags.length - 1) ? ' highlight' : ''}">${esc(t)}</span>`
+  ).join('');
+  return `<header class="page-header">
+    <span class="page-emoji">🚀</span>
+    <h1 class="page-title">${esc(c.title || 'Strategy Analyst Roadmap')}</h1>
+    <p class="page-subtitle">${esc(c.subtitle || '')}</p>
+    <div class="page-meta">${tags}</div>
+  </header>`;
+}
+
+// ── PITCH ─────────────────────────────────────────────────────
+function buildPitch(c) {
+  return `<div class="pitch-callout">
+    <strong>Your Pitch</strong>${esc(c.pitch || '')}
+  </div>`;
+}
+
+// ── FRAMEWORKS ───────────────────────────────────────────────
+function buildFrameworks(c) {
+  const card = (cls, label, items) =>
+    `<div class="framework-card ${cls}">
+      <div class="label">${label}</div>
+      <div class="items">${(items||[]).map(i=>`<span class="fw-badge">${esc(i)}</span>`).join('')}</div>
+    </div>`;
+  return `<h2 class="section-heading">🧩 Frameworks You'll Automate</h2>
+  <div class="framework-grid">
+    ${card('internal',  '⚙ Internal',   c.frameworks_internal)}
+    ${card('external',  '🌍 External',   c.frameworks_external)}
+    ${card('functional','📐 Functional', c.frameworks_functional)}
+  </div>`;
+}
+
+// ── WEEKS ─────────────────────────────────────────────────────
+function buildWeeks(weeks) {
+  const cards = weeks.map(w => {
+    const tasks = (w.tasks||[]).map(t=>`<li>${esc(t)}</li>`).join('');
+    const code  = w.code_block ? `<div class="code-block">${esc(w.code_block)}</div>` : '';
+    const success = w.success_metric ? `
+      <div class="week-success">
+        <span class="s-icon">🎯</span>
+        <div>
+          <span class="s-label">Week Goal</span>
+          <span class="s-text">${esc(w.success_metric)}</span>
+        </div>
+      </div>` : '';
+    return `<div class="week-block">
+      <div class="week-dot ${esc(w.dot_style)}">${esc(w.week_label)}</div>
+      <div class="week-card">
+        <div class="week-card-header">
+          <span class="week-card-title">${esc(w.title)}</span>
+          <span class="week-card-phase ${esc(w.phase_style)}">${esc(w.phase)}</span>
+        </div>
+        <div class="week-card-body">
+          <div class="resource-row">${esc(w.resource)}</div>
+          <ul class="build-list">${tasks}</ul>
+          ${code}
+        </div>
+        ${success}
+        <div class="portfolio-bar"><span class="dot"></span>${esc(w.portfolio)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<h2 class="section-heading">📆 Week-by-Week Plan</h2>
+  <div class="weeks-timeline">${cards}</div>`;
+}
+
+// ── DAILY ─────────────────────────────────────────────────────
+function buildDailySchedule() {
+  return `<h2 class="section-heading">⏱ Daily Schedule (2.5 hrs)</h2>
+  <div class="daily-grid">
+    <div class="daily-card d1"><div class="time">20</div><div class="unit">minutes</div><div class="desc">Learn the framework<br>(YouTube)</div></div>
+    <div class="daily-card d2"><div class="time">90</div><div class="unit">minutes</div><div class="desc">Build the automation<br>(code + test)</div></div>
+    <div class="daily-card d3"><div class="time">30</div><div class="unit">minutes</div><div class="desc">Document on GitHub<br>(screenshots + notes)</div></div>
+  </div>`;
+}
+
+// ── QUICK START ───────────────────────────────────────────────
+function buildQuickStart(days) {
+  const items = days.map(d=>`
+    <div class="qs-day">
+      <div class="day-label">${esc(d.label)}</div>
+      <div class="day-task">${esc(d.task)}</div>
+    </div>`).join('');
+  return `<h2 class="section-heading">⚡ Immediate Start</h2>
+  <div class="quickstart">
+    <div class="quickstart-title">🗓 First 7 Days</div>
+    <div class="quickstart-days">${items}</div>
+  </div>`;
+}
+
+// ── METRICS ───────────────────────────────────────────────────
+function buildMetrics(metrics) {
+  const cards = metrics.map(m=>`
+    <div class="metric-card">
+      <span class="metric-icon">${esc(m.icon)}</span>
+      <div class="metric-text">
+        <div class="title">${esc(m.title)}</div>
+        <div class="sub">${esc(m.sub)}</div>
+      </div>
+    </div>`).join('');
+  return `<h2 class="section-heading">🎯 Week 12 Success Metrics</h2>
+  <div class="metrics-grid">${cards}</div>`;
+}
+
+// ── TOOLS ─────────────────────────────────────────────────────
+function buildTools(c) {
+  const chips = (c.tools||[]).map(t=>`<span class="tool-chip">${esc(t)}</span>`).join('');
+  return `<h2 class="section-heading">🛠 Free Tool Stack</h2>
+  <div class="tools-row">${chips}</div>`;
+}
+
+// ── FOOTER ────────────────────────────────────────────────────
+function buildFooter(c) {
+  return `<footer class="page-footer">
+    <span>strategy-analyst-roadmap · 12 weeks · 2026</span>
+    <span class="salary-badge">${esc(c.salary || 'N400k+ Target')} 🚀</span>
+  </footer>`;
+}
+
+// ── UTIL ──────────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+loadRoadmap();
+</script>
+</body>
+</html>
