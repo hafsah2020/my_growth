@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --surface2: #f1efea;
+  --border: #e3e1d9;
+  --border2: #ccc9be;
+  --text: #1a1915;
+  --text2: #6b6860;
+  --text3: #9b9890;
+  --accent: #4a6fa5;
+  --accent-light: #edf0f7;
+  --sidebar-w: 220px;
+  --header-h: 56px;
+  --radius: 8px;
+  --radius-sm: 5px;
+  --font: 'DM Sans', sans-serif;
+  --font-serif: 'DM Serif Display', serif;
+
+  --tag-done-bg: #e6f4ec; --tag-done: #286742;
+  --tag-inprog-bg: #fff4e0; --tag-inprog: #8a5a00;
+  --tag-todo-bg: #f0eefc; --tag-todo: #4b3faf;
+  --tag-plan-bg: #fdecea; --tag-plan: #a0291f;
+  --tag-high-bg: #fdecea; --tag-high: #a0291f;
+  --tag-med-bg: #fff4e0; --tag-med: #8a5a00;
+  --tag-low-bg: #e6f4ec; --tag-low: #286742;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #191816;
+    --surface: #242220;
+    --surface2: #2d2b28;
+    --border: #3a3835;
+    --border2: #4a4845;
+    --text: #f0ede6;
+    --text2: #a09d96;
+    --text3: #6b6860;
+    --accent: #7da4d6;
+    --accent-light: #1e2633;
+    --tag-done-bg: #1a2e20; --tag-done: #78d49a;
+    --tag-inprog-bg: #2d220a; --tag-inprog: #f5c060;
+    --tag-todo-bg: #1e1a38; --tag-todo: #a99cef;
+    --tag-plan-bg: #2d1210; --tag-plan: #f28a84;
+    --tag-high-bg: #2d1210; --tag-high: #f28a84;
+    --tag-med-bg: #2d220a; --tag-med: #f5c060;
+    --tag-low-bg: #1a2e20; --tag-low: #78d49a;
+  }
+}
+
+body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; display: flex; height: 100vh; overflow: hidden; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-w); min-width: var(--sidebar-w); height: 100vh;
+  background: var(--surface2); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; padding: 16px 0; overflow-y: auto;
+  transition: width 0.2s; flex-shrink: 0;
+}
+.sidebar-logo { padding: 0 16px 16px; display: flex; align-items: center; gap: 8px; }
+.sidebar-logo .dot { width: 24px; height: 24px; border-radius: 6px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
+.sidebar-logo .dot span { color: #fff; font-weight: 600; font-size: 12px; }
+.sidebar-logo h2 { font-family: var(--font-serif); font-size: 15px; font-weight: 400; color: var(--text); }
+.sidebar-section { padding: 0 8px; margin-bottom: 4px; }
+.sidebar-label { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 8px 4px; }
+.sidebar-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text2); font-size: 13px; transition: background 0.1s, color 0.1s; user-select: none; }
+.sidebar-item:hover { background: var(--border); color: var(--text); }
+.sidebar-item.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+.sidebar-item .icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+
+/* ── Main ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.topbar {
+  height: var(--header-h); min-height: var(--header-h); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; background: var(--surface);
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar-title { font-family: var(--font-serif); font-size: 18px; font-weight: 400; }
+.topbar-date { font-size: 12px; color: var(--text3); }
+.topbar-right { display: flex; gap: 8px; }
+
+.btn { padding: 6px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--surface); color: var(--text2); font-size: 12px; font-family: var(--font); cursor: pointer; transition: all 0.1s; }
+.btn:hover { background: var(--surface2); color: var(--text); }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.primary:hover { opacity: 0.88; }
+
+.content { flex: 1; overflow-y: auto; padding: 28px; }
+
+/* ── Cards ── */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.section-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.07em; }
+.section-count { font-size: 12px; color: var(--text3); background: var(--surface2); padding: 2px 8px; border-radius: 20px; }
+
+/* ── Today Panel ── */
+.today-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 28px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+.stat-card .label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.stat-card .value { font-size: 26px; font-weight: 500; color: var(--text); line-height: 1; }
+.stat-card .sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+/* ── Task List ── */
+.task-list { display: flex; flex-direction: column; gap: 6px; }
+.task-row {
+  display: grid; grid-template-columns: 20px 1fr 100px 80px 100px;
+  align-items: center; gap: 12px;
+  padding: 10px 14px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  transition: border-color 0.15s; cursor: pointer;
+}
+.task-row:hover { border-color: var(--border2); }
+.task-check { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--border2); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.task-check.done { background: var(--accent); border-color: var(--accent); }
+.task-check.done::after { content: '✓'; color: #fff; font-size: 10px; }
+.task-title { font-size: 13.5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-title.done { text-decoration: line-through; color: var(--text3); }
+.task-project { font-size: 12px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-date { font-size: 12px; color: var(--text3); }
+
+/* ── Meeting List ── */
+.meeting-list { display: flex; flex-direction: column; gap: 8px; }
+.meeting-row {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 12px 16px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  transition: border-color 0.15s;
+}
+.meeting-row:hover { border-color: var(--border2); }
+.meeting-time-col { min-width: 70px; text-align: right; padding-top: 2px; }
+.meeting-time { font-size: 12px; font-weight: 500; color: var(--accent); }
+.meeting-date-sm { font-size: 11px; color: var(--text3); }
+.meeting-divider { width: 1px; background: var(--border); align-self: stretch; flex-shrink: 0; }
+.meeting-body { flex: 1; min-width: 0; }
+.meeting-title { font-size: 13.5px; font-weight: 500; color: var(--text); }
+.meeting-meta { font-size: 12px; color: var(--text3); margin-top: 3px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ── Project Cards ── */
+.project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.project-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 18px; display: flex; flex-direction: column; gap: 12px;
+  transition: border-color 0.15s, transform 0.15s; cursor: pointer;
+}
+.project-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.project-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.project-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.project-desc { font-size: 12px; color: var(--text3); line-height: 1.5; }
+.progress-bar { height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.4s; }
+.project-footer { display: flex; align-items: center; justify-content: space-between; }
+.project-deadline { font-size: 11px; color: var(--text3); }
+
+/* ── Tags ── */
+.tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.tag.done    { background: var(--tag-done-bg); color: var(--tag-done); }
+.tag.inprog  { background: var(--tag-inprog-bg); color: var(--tag-inprog); }
+.tag.todo    { background: var(--tag-todo-bg); color: var(--tag-todo); }
+.tag.plan    { background: var(--tag-plan-bg); color: var(--tag-plan); }
+.tag.high    { background: var(--tag-high-bg); color: var(--tag-high); }
+.tag.med     { background: var(--tag-med-bg); color: var(--tag-med); }
+.tag.low     { background: var(--tag-low-bg); color: var(--tag-low); }
+
+/* ── Filter bar ── */
+.filter-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-btn { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); font-size: 12px; cursor: pointer; font-family: var(--font); transition: all 0.1s; }
+.filter-btn:hover, .filter-btn.active { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+.search-input { padding: 5px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; font-family: var(--font); outline: none; width: 180px; }
+.search-input:focus { border-color: var(--accent); }
+
+/* ── Views ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── Agenda highlight ── */
+.agenda-section { background: linear-gradient(135deg, var(--accent-light), var(--surface)); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 24px; }
+.agenda-section h3 { font-family: var(--font-serif); font-size: 16px; margin-bottom: 12px; color: var(--text); }
+.agenda-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.agenda-item:last-child { border-bottom: none; }
+.agenda-bullet { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.agenda-bullet.meeting { background: #d97a1f; }
+.agenda-text { font-size: 13px; color: var(--text); }
+.agenda-meta { margin-left: auto; font-size: 11px; color: var(--text3); white-space: nowrap; }
+
+/* ── Empty state ── */
+.empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 13px; }
+
+/* ── Loading ── */
+.loading { text-align: center; padding: 60px 20px; }
+.spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Config overlay ── */
+.config-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.config-box { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 32px; max-width: 440px; width: 90%; }
+.config-box h2 { font-family: var(--font-serif); font-size: 20px; margin-bottom: 6px; }
+.config-box p { color: var(--text2); font-size: 13px; margin-bottom: 20px; line-height: 1.6; }
+.config-box label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+.config-box input { width: 100%; padding: 8px 12px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-size: 13px; font-family: var(--font); outline: none; margin-bottom: 16px; }
+.config-box input:focus { border-color: var(--accent); }
+.config-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ── Modal (add/edit) ── */
+.modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; display: none; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 28px; max-width: 500px; width: 94%; max-height: 90vh; overflow-y: auto; }
+.modal h3 { font-family: var(--font-serif); font-size: 18px; margin-bottom: 20px; }
+.form-row { margin-bottom: 14px; }
+.form-row label { display: block; font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.form-row input, .form-row select, .form-row textarea { width: 100%; padding: 7px 10px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-size: 13px; font-family: var(--font); outline: none; }
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--accent); }
+.form-row textarea { resize: vertical; min-height: 72px; }
+.form-row select option { background: var(--surface); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+/* ── Responsive ── */
+@media (max-width: 680px) {
+  .sidebar { display: none; }
+  .today-grid { grid-template-columns: 1fr 1fr; }
+  .task-row { grid-template-columns: 20px 1fr 80px; }
+  .task-row .task-project, .task-row .task-date { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="dot"><span>H</span></div>
+    <h2>Workspace</h2>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Overview</div>
+    <div class="sidebar-item active" data-view="today" onclick="switchView('today', this)">
+      <span class="icon">☀</span> Today
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Work</div>
+    <div class="sidebar-item" data-view="tasks" onclick="switchView('tasks', this)">
+      <span class="icon">✓</span> Tasks
+    </div>
+    <div class="sidebar-item" data-view="meetings" onclick="switchView('meetings', this)">
+      <span class="icon">◷</span> Meetings
+    </div>
+    <div class="sidebar-item" data-view="projects" onclick="switchView('projects', this)">
+      <span class="icon">◈</span> Projects
+    </div>
+  </div>
+
+  <div class="sidebar-section" style="margin-top: auto; padding-top: 16px;">
+    <div class="sidebar-item" onclick="openConfig()" style="color: var(--text3); font-size: 12px;">
+      <span class="icon">⚙</span> Settings
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="view-title">Today</div>
+      <div class="topbar-date" id="today-date"></div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn" onclick="loadData()">↻ Refresh</button>
+      <button class="btn primary" id="add-btn" onclick="openAddModal()">+ New</button>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <div class="content" id="content">
+    <div class="loading"><div class="spinner"></div><p style="color:var(--text3);font-size:13px;">Loading workspace…</p></div>
+  </div>
+</main>
+
+<!-- Config overlay (only shown if Settings is clicked) -->
+<div class="config-overlay" id="config-overlay" style="position:fixed; display:none;">
+  <div class="config-box">
+    <h2>Connect Your Sheet</h2>
+    <p>Paste the deployed Google Apps Script Web App URL below. This is the URL you get after clicking <strong>Deploy → New Deployment → Web App</strong>.</p>
+    <label>Apps Script Web App URL</label>
+    <input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/…/exec" />
+    <div class="config-actions">
+      <button class="btn" onclick="document.getElementById('config-overlay').style.display='none'">Cancel</button>
+      <button class="btn primary" onclick="saveConfig()">Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">New Task</h3>
+    <div id="modal-form"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="submitModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'notion_tracker_url';
+
+// ─────────────────────────────────────────────────────────────
+// YOUR APPS SCRIPT URL — replace the value below with your URL
+// ─────────────────────────────────────────────────────────────
+let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_zXNJkIC4SZpybBMGS1eGAcTqYvUbBGa2jWIDM1-Sy9o47LhiEc9C67VeWTwD8okX/exec';
+// ─────────────────────────────────────────────────────────────
+
+let currentView = 'today';
+let allData = { tasks: [], meetings: [], projects: [] };
+let modalMode = { type: '', action: 'add', row: null };
+
+// ── Date helpers ──────────────────────────────────────────────
+
+const today = new Date();
+today.setHours(0,0,0,0);
+
+function isoToday() { return today.toISOString().split('T')[0]; }
+
+function fmtDate(str) {
+  if (!str) return '';
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function isToday(str) {
+  if (!str) return false;
+  return str.startsWith(isoToday());
+}
+
+function isPast(str) {
+  if (!str) return false;
+  return new Date(str + 'T00:00:00') < today;
+}
+
+function statusClass(s) {
+  if (!s) return 'todo';
+  const sl = s.toLowerCase();
+  if (sl.includes('done') || sl.includes('complete')) return 'done';
+  if (sl.includes('progress') || sl.includes('active')) return 'inprog';
+  if (sl.includes('plan')) return 'plan';
+  return 'todo';
+}
+
+function priorityClass(p) {
+  if (!p) return 'med';
+  const pl = p.toLowerCase();
+  if (pl.includes('high')) return 'high';
+  if (pl.includes('low')) return 'low';
+  return 'med';
+}
+
+// ── Config ───────────────────────────────────────────────────
+
+function openConfig() {
+  document.getElementById('script-url-input').value = SCRIPT_URL;
+  document.getElementById('config-overlay').style.display = 'flex';
+}
+
+function saveConfig() {
+  const val = document.getElementById('script-url-input').value.trim();
+  if (!val) return alert('Please enter a URL.');
+  SCRIPT_URL = val;
+  localStorage.setItem(STORAGE_KEY, val);
+  document.getElementById('config-overlay').style.display = 'none';
+  loadData();
+}
+
+// ── Data loading ──────────────────────────────────────────────
+
+async function loadData() {
+  if (!SCRIPT_URL) { openConfig(); return; }
+  showLoading();
+  try {
+    const url = SCRIPT_URL + '?action=all&t=' + Date.now();
+    const res = await fetch(url);
+    const json = await res.json();
+    if (json.status === 'ok') {
+      allData = json.data;
+      renderView(currentView);
+    } else {
+      showError('Could not load data. Check your Apps Script URL.');
+    }
+  } catch(e) {
+    showError('Failed to connect. Make sure your web app is deployed and accessible.');
+  }
+}
+
+function showLoading() {
+  document.getElementById('content').innerHTML = `<div class="loading"><div class="spinner"></div><p style="color:var(--text3);font-size:13px;">Loading…</p></div>`;
+}
+
+function showError(msg) {
+  document.getElementById('content').innerHTML = `<div class="empty"><p style="color:#c0392b;font-size:14px;">⚠ ${msg}</p><button class="btn" style="margin-top:12px;" onclick="openConfig()">Update Settings</button></div>`;
+}
+
+// ── View routing ──────────────────────────────────────────────
+
+const viewTitles = { today: 'Today', tasks: 'Tasks', meetings: 'Meetings', projects: 'Projects' };
+
+function switchView(view, el) {
+  currentView = view;
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('view-title').textContent = viewTitles[view];
+  renderView(view);
+}
+
+function renderView(view) {
+  if (view === 'today') renderToday();
+  else if (view === 'tasks') renderTasks();
+  else if (view === 'meetings') renderMeetings();
+  else if (view === 'projects') renderProjects();
+}
+
+// ── TODAY ─────────────────────────────────────────────────────
+
+function renderToday() {
+  const todayTasks = allData.tasks.filter(t => isToday(t.date) || (!t.date && t.status !== 'Done'));
+  const todayMeetings = allData.meetings.filter(m => isToday(m.date));
+  const inProgress = allData.projects.filter(p => statusClass(p.status) === 'inprog');
+  const doneTasks = allData.tasks.filter(t => statusClass(t.status) === 'done').length;
+
+  const d = new Date();
+  document.getElementById('today-date').textContent = d.toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  let agendaHtml = '';
+  const agendaItems = [
+    ...todayTasks.slice(0, 4).map(t => ({ text: t.title, meta: t.project || '', type: 'task' })),
+    ...todayMeetings.map(m => ({ text: m.title, meta: m.time || '', type: 'meeting' }))
+  ];
+
+  if (agendaItems.length) {
+    agendaHtml = `<div class="agenda-section"><h3>Today's Agenda</h3>
+      ${agendaItems.map(a => `
+        <div class="agenda-item">
+          <div class="agenda-bullet ${a.type === 'meeting' ? 'meeting' : ''}"></div>
+          <div class="agenda-text">${esc(a.text)}</div>
+          <div class="agenda-meta">${esc(a.meta)}</div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  const html = `
+    ${agendaHtml}
+    <div class="today-grid">
+      <div class="stat-card">
+        <div class="label">Tasks Today</div>
+        <div class="value">${todayTasks.length}</div>
+        <div class="sub">${doneTasks} done overall</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Meetings</div>
+        <div class="value">${todayMeetings.length}</div>
+        <div class="sub">scheduled today</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Active Projects</div>
+        <div class="value">${inProgress.length}</div>
+        <div class="sub">in progress</div>
+      </div>
+    </div>
+
+    ${todayTasks.length ? `
+      <div class="section-header"><span class="section-title">Tasks</span><span class="section-count">${todayTasks.length}</span></div>
+      <div class="task-list">${todayTasks.map(t => taskRow(t)).join('')}</div>
+    ` : ''}
+
+    ${todayMeetings.length ? `
+      <div class="section-header" style="margin-top:24px"><span class="section-title">Meetings</span><span class="section-count">${todayMeetings.length}</span></div>
+      <div class="meeting-list">${todayMeetings.map(m => meetingRow(m)).join('')}</div>
+    ` : ''}
+  `;
+
+  document.getElementById('content').innerHTML = html;
+}
+
+// ── TASKS ─────────────────────────────────────────────────────
+
+function renderTasks(filter = 'all', search = '') {
+  let tasks = [...allData.tasks];
+
+  if (filter !== 'all') {
+    if (filter === 'today') tasks = tasks.filter(t => isToday(t.date));
+    else tasks = tasks.filter(t => statusClass(t.status) === filter);
+  }
+  if (search) tasks = tasks.filter(t => t.title.toLowerCase().includes(search.toLowerCase()) || (t.project||'').toLowerCase().includes(search.toLowerCase()));
+
+  const html = `
+    <div class="filter-bar">
+      <input class="search-input" id="task-search" placeholder="Search tasks…" oninput="renderTasks(getActiveFilter('task-filter'), this.value)" value="${esc(search)}" />
+      ${['all','today','inprog','done'].map(f => `<button class="filter-btn ${filter===f?'active':''}" id="task-filter-${f}" onclick="setFilter('task-filter','${f}',renderTasks)">${f==='all'?'All':f==='inprog'?'In Progress':f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+    </div>
+    <div class="section-header"><span class="section-title">Tasks</span><span class="section-count">${tasks.length}</span></div>
+    <div class="task-list">
+      ${tasks.length ? tasks.map(t => taskRow(t)).join('') : '<div class="empty">No tasks found</div>'}
+    </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+}
+
+function taskRow(t) {
+  const done = statusClass(t.status) === 'done';
+  return `<div class="task-row" onclick="editItem('tasks',${t._row})">
+    <div class="task-check ${done ? 'done' : ''}" onclick="event.stopPropagation();toggleTaskDone(${t._row},${done})"></div>
+    <div class="task-title ${done ? 'done' : ''}">${esc(t.title)}</div>
+    <div>${badge(t.status)}</div>
+    <div>${badge(t.priority, true)}</div>
+    <div class="task-project">${esc(t.project)}</div>
+  </div>`;
+}
+
+// ── MEETINGS ──────────────────────────────────────────────────
+
+function renderMeetings(filter = 'all', search = '') {
+  let meetings = [...allData.meetings].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+  if (filter === 'today') meetings = meetings.filter(m => isToday(m.date));
+  if (filter === 'upcoming') meetings = meetings.filter(m => !isPast(m.date) || isToday(m.date));
+  if (search) meetings = meetings.filter(m => m.title.toLowerCase().includes(search.toLowerCase()));
+
+  const html = `
+    <div class="filter-bar">
+      <input class="search-input" placeholder="Search meetings…" oninput="renderMeetings(getActiveFilter('mtg-filter'), this.value)" value="${esc(search)}" />
+      ${['all','today','upcoming'].map(f => `<button class="filter-btn ${filter===f?'active':''}" id="mtg-filter-${f}" onclick="setFilter('mtg-filter','${f}',renderMeetings)">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+    </div>
+    <div class="section-header"><span class="section-title">Meetings</span><span class="section-count">${meetings.length}</span></div>
+    <div class="meeting-list">
+      ${meetings.length ? meetings.map(m => meetingRow(m)).join('') : '<div class="empty">No meetings found</div>'}
+    </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+}
+
+function meetingRow(m) {
+  return `<div class="meeting-row" onclick="editItem('meetings',${m._row})">
+    <div class="meeting-time-col">
+      <div class="meeting-time">${esc(m.time)}</div>
+      <div class="meeting-date-sm">${fmtDate(m.date)}</div>
+    </div>
+    <div class="meeting-divider"></div>
+    <div class="meeting-body">
+      <div class="meeting-title">${esc(m.title)}</div>
+      <div class="meeting-meta">
+        ${m.attendees ? `<span>👤 ${esc(m.attendees)}</span>` : ''}
+        ${m.location  ? `<span>📍 ${esc(m.location)}</span>` : ''}
+        ${m.notes     ? `<span>${esc(m.notes.slice(0,60))}${m.notes.length>60?'…':''}</span>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── PROJECTS ──────────────────────────────────────────────────
+
+function renderProjects(filter = 'all') {
+  let projects = [...allData.projects];
+  if (filter !== 'all') projects = projects.filter(p => statusClass(p.status) === filter);
+
+  const html = `
+    <div class="filter-bar">
+      ${['all','inprog','plan','done'].map(f => `<button class="filter-btn ${filter===f?'active':''}" onclick="renderProjects('${f}')">${f==='all'?'All':f==='inprog'?'In Progress':f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+    </div>
+    <div class="section-header"><span class="section-title">Projects</span><span class="section-count">${projects.length}</span></div>
+    <div class="project-grid">
+      ${projects.length ? projects.map(p => projectCard(p)).join('') : '<div class="empty">No projects found</div>'}
+    </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+}
+
+function projectCard(p) {
+  const pct = Math.min(100, Math.max(0, Number(p.progress) || 0));
+  return `<div class="project-card" onclick="editItem('projects',${p._row})">
+    <div class="project-card-top">
+      <div class="project-name">${esc(p.title)}</div>
+      ${badge(p.status)}
+    </div>
+    <div class="project-desc">${esc(p.description || '')}</div>
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+        <span style="font-size:11px;color:var(--text3);">Progress</span>
+        <span style="font-size:11px;color:var(--text2);font-weight:500;">${pct}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="project-footer">
+      <div class="project-deadline">${p.deadline ? '🗓 ' + fmtDate(p.deadline) : ''}</div>
+    </div>
+  </div>`;
+}
+
+// ── Badges ────────────────────────────────────────────────────
+
+function badge(val, isPriority = false) {
+  if (!val) return '';
+  const cls = isPriority ? priorityClass(val) : statusClass(val);
+  const label = val.length > 16 ? val.slice(0, 14) + '…' : val;
+  return `<span class="tag ${cls}">${esc(label)}</span>`;
+}
+
+// ── Filter helpers ────────────────────────────────────────────
+
+function getActiveFilter(prefix) {
+  const active = document.querySelector(`[id^="${prefix}-"].active`);
+  return active ? active.id.replace(prefix + '-', '') : 'all';
+}
+
+function setFilter(prefix, val, renderFn) {
+  document.querySelectorAll(`[id^="${prefix}-"]`).forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`${prefix}-${val}`);
+  if (btn) btn.classList.add('active');
+  const search = document.querySelector('.search-input');
+  renderFn(val, search ? search.value : '');
+}
+
+// ── Toggle task done ─────────────────────────────────────────
+
+async function toggleTaskDone(row, isDone) {
+  const task = allData.tasks.find(t => t._row === row);
+  if (!task) return;
+  const newStatus = isDone ? 'Not Started' : 'Done';
+  task.status = newStatus;
+  renderView(currentView);
+  await postData({ type: 'tasks', action: 'update', row, values: [task.date, task.title, newStatus, task.priority, task.project, task.notes] });
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+
+function openAddModal() {
+  modalMode = { type: currentView === 'today' ? 'tasks' : currentView, action: 'add', row: null };
+  buildModalForm(modalMode.type, null);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function editItem(type, row) {
+  const items = allData[type];
+  const item = items.find(i => i._row === row);
+  modalMode = { type, action: 'edit', row };
+  buildModalForm(type, item);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function buildModalForm(type, data) {
+  const d = data || {};
+  document.getElementById('modal-title').textContent = (data ? 'Edit' : 'New') + ' ' + (type.slice(0, -1).charAt(0).toUpperCase() + type.slice(1, -1));
+
+  let fields = '';
+  if (type === 'tasks') {
+    fields = `
+      <div class="form-row"><label>Title</label><input id="f-title" value="${esc(d.title||'')}" placeholder="Task title" /></div>
+      <div class="form-row"><label>Date</label><input id="f-date" type="date" value="${d.date||isoToday()}" /></div>
+      <div class="form-row"><label>Status</label><select id="f-status">
+        ${['Not Started','In Progress','Done','On Hold'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+      <div class="form-row"><label>Priority</label><select id="f-priority">
+        ${['High','Medium','Low'].map(s=>`<option ${d.priority===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+      <div class="form-row"><label>Project</label><input id="f-project" value="${esc(d.project||'')}" placeholder="e.g. DEER Nigeria" /></div>
+      <div class="form-row"><label>Notes</label><textarea id="f-notes">${esc(d.notes||'')}</textarea></div>
+    `;
+  } else if (type === 'meetings') {
+    fields = `
+      <div class="form-row"><label>Title</label><input id="f-title" value="${esc(d.title||'')}" placeholder="Meeting title" /></div>
+      <div class="form-row"><label>Date</label><input id="f-date" type="date" value="${d.date||isoToday()}" /></div>
+      <div class="form-row"><label>Time</label><input id="f-time" value="${esc(d.time||'')}" placeholder="e.g. 10:00 AM" /></div>
+      <div class="form-row"><label>Attendees</label><input id="f-attendees" value="${esc(d.attendees||'')}" placeholder="Names separated by commas" /></div>
+      <div class="form-row"><label>Location / Link</label><input id="f-location" value="${esc(d.location||'')}" placeholder="Zoom, Google Meet, In-person…" /></div>
+      <div class="form-row"><label>Notes</label><textarea id="f-notes">${esc(d.notes||'')}</textarea></div>
+    `;
+  } else if (type === 'projects') {
+    fields = `
+      <div class="form-row"><label>Title</label><input id="f-title" value="${esc(d.title||'')}" placeholder="Project name" /></div>
+      <div class="form-row"><label>Status</label><select id="f-status">
+        ${['Planning','In Progress','Done','On Hold'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+      <div class="form-row"><label>Deadline</label><input id="f-deadline" type="date" value="${d.deadline||''}" /></div>
+      <div class="form-row"><label>Description</label><textarea id="f-description">${esc(d.description||'')}</textarea></div>
+      <div class="form-row"><label>Progress %</label><input id="f-progress" type="number" min="0" max="100" value="${d.progress||0}" /></div>
+    `;
+  }
+  document.getElementById('modal-form').innerHTML = fields;
+}
+
+async function submitModal() {
+  const { type, action, row } = modalMode;
+  let values = [];
+
+  const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+
+  if (type === 'tasks') {
+    if (!g('f-title')) { alert('Title is required.'); return; }
+    values = [g('f-date'), g('f-title'), g('f-status'), g('f-priority'), g('f-project'), g('f-notes')];
+  } else if (type === 'meetings') {
+    if (!g('f-title')) { alert('Title is required.'); return; }
+    values = [g('f-date'), g('f-time'), g('f-title'), g('f-attendees'), g('f-location'), g('f-notes')];
+  } else if (type === 'projects') {
+    if (!g('f-title')) { alert('Title is required.'); return; }
+    values = [g('f-title'), g('f-status'), g('f-deadline'), g('f-description'), Number(g('f-progress'))||0];
+  }
+
+  closeModal();
+  await postData({ type, action, row, values });
+  await loadData();
+}
+
+// ── POST to Apps Script ───────────────────────────────────────
+
+async function postData(payload) {
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch(e) {
+    console.error('POST failed', e);
+  }
+}
+
+// ── Escape HTML ───────────────────────────────────────────────
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──────────────────────────────────────────────────────
+
+(function init() {
+  const d = new Date();
+  document.getElementById('today-date').textContent = d.toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('config-overlay').style.display = 'none';
+  loadData();
+})();
+</script>
+</body>
+</html>
