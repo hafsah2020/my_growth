@@ -272,7 +272,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
     </div>
     <div class="topbar-right">
       <button class="btn" onclick="loadData()">↻ Refresh</button>
-      <button class="btn primary" onclick="openAddModal()">+ New</button>
     </div>
   </header>
   <div class="content" id="content">
@@ -296,20 +295,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
 </nav>
 
 <!-- FAB (mobile) -->
-<button class="fab" onclick="openAddModal()">+</button>
-
-<!-- Modal -->
-<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <h3 id="modal-title">New Task</h3>
-    <div id="modal-form"></div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal()">Cancel</button>
-      <button class="btn primary" onclick="submitModal()">Save</button>
-    </div>
-  </div>
-</div>
 
 <script>
 let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_zXNJkIC4SZpybBMGS1eGAcTqYvUbBGa2jWIDM1-Sy9o47LhiEc9C67VeWTwD8okX/exec';
@@ -471,63 +456,6 @@ async function toggleTaskDone(row,isDone) {
   await postData({type:'tasks',action:'update',row,values:[task.date,task.title,task.status,task.priority,task.project,task.notes]});
 }
 
-function openAddModal() {
-  modalMode = {type:currentView,action:'add',row:null};
-  buildModalForm(currentView,null);
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function editItem(type,row) {
-  const item = allData[type].find(i=>i._row===row);
-  modalMode = {type,action:'edit',row};
-  buildModalForm(type,item);
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
-
-function buildModalForm(type,data) {
-  const d = data||{};
-  const name = type==='tasks'?'Task':type==='meetings'?'Meeting':'Project';
-  document.getElementById('modal-title').textContent = (data?'Edit ':'New ')+name;
-  let fields = '';
-  if (type==='tasks') fields = `
-    <div class="form-row"><label>Title</label><input id="f-title" value="${esc(d.title||'')}" placeholder="Task title" /></div>
-    <div class="form-row"><label>Date</label><input id="f-date" type="date" value="${d.date||isoToday()}" /></div>
-    <div class="form-row"><label>Status</label><select id="f-status">${['Not Started','In Progress','Done','On Hold'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
-    <div class="form-row"><label>Priority</label><select id="f-priority">${['High','Medium','Low'].map(s=>`<option ${d.priority===s?'selected':''}>${s}</option>`).join('')}</select></div>
-    <div class="form-row"><label>Project</label><input id="f-project" value="${esc(d.project||'')}" placeholder="e.g. DEER Nigeria" /></div>
-    <div class="form-row"><label>Notes</label><textarea id="f-notes">${esc(d.notes||'')}</textarea></div>`;
-  else if (type==='meetings') fields = `
-    <div class="form-row"><label>Title</label><input id="f-title" value="${esc(d.title||'')}" placeholder="Meeting title" /></div>
-    <div class="form-row"><label>Date</label><input id="f-date" type="date" value="${d.date||isoToday()}" /></div>
-    <div class="form-row"><label>Time</label><input id="f-time" value="${esc(d.time||'')}" placeholder="e.g. 10:00 AM" /></div>
-    <div class="form-row"><label>Attendees</label><input id="f-attendees" value="${esc(d.attendees||'')}" placeholder="Names separated by commas" /></div>
-    <div class="form-row"><label>Location / Link</label><input id="f-location" value="${esc(d.location||'')}" placeholder="Zoom, Google Meet, In-person…" /></div>
-    <div class="form-row"><label>Notes</label><textarea id="f-notes">${esc(d.notes||'')}</textarea></div>`;
-  else if (type==='projects') fields = `
-    <div class="form-row"><label>Title</label><input id="f-title" value="${esc(d.title||'')}" placeholder="Project name" /></div>
-    <div class="form-row"><label>Status</label><select id="f-status">${['Planning','In Progress','Done','On Hold'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
-    <div class="form-row"><label>Deadline</label><input id="f-deadline" type="date" value="${d.deadline||''}" /></div>
-    <div class="form-row"><label>Description</label><textarea id="f-description">${esc(d.description||'')}</textarea></div>
-    <div class="form-row"><label>Progress %</label><input id="f-progress" type="number" min="0" max="100" value="${d.progress||0}" /></div>`;
-  document.getElementById('modal-form').innerHTML = fields;
-}
-
-async function submitModal() {
-  const {type,action,row} = modalMode;
-  const g = id => { const el=document.getElementById(id); return el?el.value.trim():''; };
-  let values=[];
-  if (type==='tasks') { if(!g('f-title')){alert('Title is required.');return;} values=[g('f-date'),g('f-title'),g('f-status'),g('f-priority'),g('f-project'),g('f-notes')]; }
-  else if (type==='meetings') { if(!g('f-title')){alert('Title is required.');return;} values=[g('f-date'),g('f-time'),g('f-title'),g('f-attendees'),g('f-location'),g('f-notes')]; }
-  else if (type==='projects') { if(!g('f-title')){alert('Title is required.');return;} values=[g('f-title'),g('f-status'),g('f-deadline'),g('f-description'),Number(g('f-progress'))||0]; }
-  closeModal();
-  await postData({type,action,row,values});
-  await loadData();
-}
-
-async function postData(payload) {
-  try { await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'application/json'}}); }
-  catch(e) { console.error('POST failed',e); }
-}
 
 function esc(str) {
   if (!str) return '';
