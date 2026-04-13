@@ -103,13 +103,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
 .section-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.07em; }
 .section-count { font-size: 12px; color: var(--text3); background: var(--surface2); padding: 2px 8px; border-radius: 20px; }
 
-/* ── Today Panel ── */
-.today-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 28px; }
-.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
-.stat-card .label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
-.stat-card .value { font-size: 26px; font-weight: 500; color: var(--text); line-height: 1; }
-.stat-card .sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
-
 /* ── Task List ── */
 .task-list { display: flex; flex-direction: column; gap: 6px; }
 .task-row {
@@ -178,20 +171,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
 .search-input { padding: 5px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; font-family: var(--font); outline: none; width: 180px; }
 .search-input:focus { border-color: var(--accent); }
 
-/* ── Views ── */
-.view { display: none; }
-.view.active { display: block; }
-
-/* ── Agenda highlight ── */
-.agenda-section { background: linear-gradient(135deg, var(--accent-light), var(--surface)); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 24px; }
-.agenda-section h3 { font-family: var(--font-serif); font-size: 16px; margin-bottom: 12px; color: var(--text); }
-.agenda-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
-.agenda-item:last-child { border-bottom: none; }
-.agenda-bullet { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-.agenda-bullet.meeting { background: #d97a1f; }
-.agenda-text { font-size: 13px; color: var(--text); }
-.agenda-meta { margin-left: auto; font-size: 11px; color: var(--text3); white-space: nowrap; }
-
 /* ── Empty state ── */
 .empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 13px; }
 
@@ -200,15 +179,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
 .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Config overlay ── */
-.config-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.config-box { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 32px; max-width: 440px; width: 90%; }
-.config-box h2 { font-family: var(--font-serif); font-size: 20px; margin-bottom: 6px; }
-.config-box p { color: var(--text2); font-size: 13px; margin-bottom: 20px; line-height: 1.6; }
-.config-box label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-.config-box input { width: 100%; padding: 8px 12px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-size: 13px; font-family: var(--font); outline: none; margin-bottom: 16px; }
-.config-box input:focus { border-color: var(--accent); }
-.config-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
 
 /* ── Modal (add/edit) ── */
 .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; display: none; }
@@ -226,7 +197,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
 /* ── Responsive ── */
 @media (max-width: 680px) {
   .sidebar { display: none; }
-  .today-grid { grid-template-columns: 1fr 1fr; }
   .task-row { grid-template-columns: 20px 1fr 80px; }
   .task-row .task-project, .task-row .task-date { display: none; }
 }
@@ -242,15 +212,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
   </div>
 
   <div class="sidebar-section">
-    <div class="sidebar-label">Overview</div>
-    <div class="sidebar-item active" data-view="today" onclick="switchView('today', this)">
-      <span class="icon">☀</span> Today
-    </div>
-  </div>
-
-  <div class="sidebar-section">
     <div class="sidebar-label">Work</div>
-    <div class="sidebar-item" data-view="tasks" onclick="switchView('tasks', this)">
+    <div class="sidebar-item active" data-view="tasks" onclick="switchView('tasks', this)">
       <span class="icon">✓</span> Tasks
     </div>
     <div class="sidebar-item" data-view="meetings" onclick="switchView('meetings', this)">
@@ -261,11 +224,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
     </div>
   </div>
 
-  <div class="sidebar-section" style="margin-top: auto; padding-top: 16px;">
-    <div class="sidebar-item" onclick="openConfig()" style="color: var(--text3); font-size: 12px;">
-      <span class="icon">⚙</span> Settings
-    </div>
-  </div>
+
 </aside>
 
 <!-- Main -->
@@ -274,7 +233,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
   <!-- Top bar -->
   <header class="topbar">
     <div class="topbar-left">
-      <div class="topbar-title" id="view-title">Today</div>
+      <div class="topbar-title" id="view-title">Tasks</div>
       <div class="topbar-date" id="today-date"></div>
     </div>
     <div class="topbar-right">
@@ -289,19 +248,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
   </div>
 </main>
 
-<!-- Config overlay (only shown if Settings is clicked) -->
-<div class="config-overlay" id="config-overlay" style="position:fixed; display:none;">
-  <div class="config-box">
-    <h2>Connect Your Sheet</h2>
-    <p>Paste the deployed Google Apps Script Web App URL below. This is the URL you get after clicking <strong>Deploy → New Deployment → Web App</strong>.</p>
-    <label>Apps Script Web App URL</label>
-    <input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/…/exec" />
-    <div class="config-actions">
-      <button class="btn" onclick="document.getElementById('config-overlay').style.display='none'">Cancel</button>
-      <button class="btn primary" onclick="saveConfig()">Connect</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- Add/Edit Modal -->
 <div class="modal-overlay" id="modal-overlay">
@@ -316,15 +263,9 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); font
 </div>
 
 <script>
-const STORAGE_KEY = 'notion_tracker_url';
-
-// ─────────────────────────────────────────────────────────────
-// YOUR APPS SCRIPT URL — replace the value below with your URL
-// ─────────────────────────────────────────────────────────────
 let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_zXNJkIC4SZpybBMGS1eGAcTqYvUbBGa2jWIDM1-Sy9o47LhiEc9C67VeWTwD8okX/exec';
-// ─────────────────────────────────────────────────────────────
 
-let currentView = 'today';
+let currentView = 'tasks';
 let allData = { tasks: [], meetings: [], projects: [] };
 let modalMode = { type: '', action: 'add', row: null };
 
@@ -341,14 +282,14 @@ function fmtDate(str) {
   return d.toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function isToday(str) {
-  if (!str) return false;
-  return str.startsWith(isoToday());
-}
-
 function isPast(str) {
   if (!str) return false;
   return new Date(str + 'T00:00:00') < today;
+}
+
+function isToday(str) {
+  if (!str) return false;
+  return str.startsWith(isoToday());
 }
 
 function statusClass(s) {
@@ -368,26 +309,11 @@ function priorityClass(p) {
   return 'med';
 }
 
-// ── Config ───────────────────────────────────────────────────
 
-function openConfig() {
-  document.getElementById('script-url-input').value = SCRIPT_URL;
-  document.getElementById('config-overlay').style.display = 'flex';
-}
-
-function saveConfig() {
-  const val = document.getElementById('script-url-input').value.trim();
-  if (!val) return alert('Please enter a URL.');
-  SCRIPT_URL = val;
-  localStorage.setItem(STORAGE_KEY, val);
-  document.getElementById('config-overlay').style.display = 'none';
-  loadData();
-}
 
 // ── Data loading ──────────────────────────────────────────────
 
 async function loadData() {
-  if (!SCRIPT_URL) { openConfig(); return; }
   showLoading();
   try {
     const url = SCRIPT_URL + '?action=all&t=' + Date.now();
@@ -409,12 +335,12 @@ function showLoading() {
 }
 
 function showError(msg) {
-  document.getElementById('content').innerHTML = `<div class="empty"><p style="color:#c0392b;font-size:14px;">⚠ ${msg}</p><button class="btn" style="margin-top:12px;" onclick="openConfig()">Update Settings</button></div>`;
+  document.getElementById('content').innerHTML = `<div class="empty"><p style="color:#c0392b;font-size:14px;">⚠ ${msg}</p></div>`;
 }
 
 // ── View routing ──────────────────────────────────────────────
 
-const viewTitles = { today: 'Today', tasks: 'Tasks', meetings: 'Meetings', projects: 'Projects' };
+const viewTitles = { tasks: 'Tasks', meetings: 'Meetings', projects: 'Projects' };
 
 function switchView(view, el) {
   currentView = view;
@@ -425,73 +351,9 @@ function switchView(view, el) {
 }
 
 function renderView(view) {
-  if (view === 'today') renderToday();
-  else if (view === 'tasks') renderTasks();
+  if (view === 'tasks') renderTasks();
   else if (view === 'meetings') renderMeetings();
   else if (view === 'projects') renderProjects();
-}
-
-// ── TODAY ─────────────────────────────────────────────────────
-
-function renderToday() {
-  const todayTasks = allData.tasks.filter(t => isToday(t.date) || (!t.date && t.status !== 'Done'));
-  const todayMeetings = allData.meetings.filter(m => isToday(m.date));
-  const inProgress = allData.projects.filter(p => statusClass(p.status) === 'inprog');
-  const doneTasks = allData.tasks.filter(t => statusClass(t.status) === 'done').length;
-
-  const d = new Date();
-  document.getElementById('today-date').textContent = d.toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-  let agendaHtml = '';
-  const agendaItems = [
-    ...todayTasks.slice(0, 4).map(t => ({ text: t.title, meta: t.project || '', type: 'task' })),
-    ...todayMeetings.map(m => ({ text: m.title, meta: m.time || '', type: 'meeting' }))
-  ];
-
-  if (agendaItems.length) {
-    agendaHtml = `<div class="agenda-section"><h3>Today's Agenda</h3>
-      ${agendaItems.map(a => `
-        <div class="agenda-item">
-          <div class="agenda-bullet ${a.type === 'meeting' ? 'meeting' : ''}"></div>
-          <div class="agenda-text">${esc(a.text)}</div>
-          <div class="agenda-meta">${esc(a.meta)}</div>
-        </div>
-      `).join('')}
-    </div>`;
-  }
-
-  const html = `
-    ${agendaHtml}
-    <div class="today-grid">
-      <div class="stat-card">
-        <div class="label">Tasks Today</div>
-        <div class="value">${todayTasks.length}</div>
-        <div class="sub">${doneTasks} done overall</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Meetings</div>
-        <div class="value">${todayMeetings.length}</div>
-        <div class="sub">scheduled today</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Active Projects</div>
-        <div class="value">${inProgress.length}</div>
-        <div class="sub">in progress</div>
-      </div>
-    </div>
-
-    ${todayTasks.length ? `
-      <div class="section-header"><span class="section-title">Tasks</span><span class="section-count">${todayTasks.length}</span></div>
-      <div class="task-list">${todayTasks.map(t => taskRow(t)).join('')}</div>
-    ` : ''}
-
-    ${todayMeetings.length ? `
-      <div class="section-header" style="margin-top:24px"><span class="section-title">Meetings</span><span class="section-count">${todayMeetings.length}</span></div>
-      <div class="meeting-list">${todayMeetings.map(m => meetingRow(m)).join('')}</div>
-    ` : ''}
-  `;
-
-  document.getElementById('content').innerHTML = html;
 }
 
 // ── TASKS ─────────────────────────────────────────────────────
@@ -500,15 +362,14 @@ function renderTasks(filter = 'all', search = '') {
   let tasks = [...allData.tasks];
 
   if (filter !== 'all') {
-    if (filter === 'today') tasks = tasks.filter(t => isToday(t.date));
-    else tasks = tasks.filter(t => statusClass(t.status) === filter);
+    tasks = tasks.filter(t => statusClass(t.status) === filter);
   }
   if (search) tasks = tasks.filter(t => t.title.toLowerCase().includes(search.toLowerCase()) || (t.project||'').toLowerCase().includes(search.toLowerCase()));
 
   const html = `
     <div class="filter-bar">
       <input class="search-input" id="task-search" placeholder="Search tasks…" oninput="renderTasks(getActiveFilter('task-filter'), this.value)" value="${esc(search)}" />
-      ${['all','today','inprog','done'].map(f => `<button class="filter-btn ${filter===f?'active':''}" id="task-filter-${f}" onclick="setFilter('task-filter','${f}',renderTasks)">${f==='all'?'All':f==='inprog'?'In Progress':f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+      ${['all','inprog','done'].map(f => `<button class="filter-btn ${filter===f?'active':''}" id="task-filter-${f}" onclick="setFilter('task-filter','${f}',renderTasks)">${f==='all'?'All':f==='inprog'?'In Progress':f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
     </div>
     <div class="section-header"><span class="section-title">Tasks</span><span class="section-count">${tasks.length}</span></div>
     <div class="task-list">
@@ -533,14 +394,13 @@ function taskRow(t) {
 
 function renderMeetings(filter = 'all', search = '') {
   let meetings = [...allData.meetings].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-  if (filter === 'today') meetings = meetings.filter(m => isToday(m.date));
   if (filter === 'upcoming') meetings = meetings.filter(m => !isPast(m.date) || isToday(m.date));
   if (search) meetings = meetings.filter(m => m.title.toLowerCase().includes(search.toLowerCase()));
 
   const html = `
     <div class="filter-bar">
       <input class="search-input" placeholder="Search meetings…" oninput="renderMeetings(getActiveFilter('mtg-filter'), this.value)" value="${esc(search)}" />
-      ${['all','today','upcoming'].map(f => `<button class="filter-btn ${filter===f?'active':''}" id="mtg-filter-${f}" onclick="setFilter('mtg-filter','${f}',renderMeetings)">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
+      ${['all','upcoming'].map(f => `<button class="filter-btn ${filter===f?'active':''}" id="mtg-filter-${f}" onclick="setFilter('mtg-filter','${f}',renderMeetings)">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join('')}
     </div>
     <div class="section-header"><span class="section-title">Meetings</span><span class="section-count">${meetings.length}</span></div>
     <div class="meeting-list">
@@ -645,7 +505,7 @@ async function toggleTaskDone(row, isDone) {
 // ── Modal ─────────────────────────────────────────────────────
 
 function openAddModal() {
-  modalMode = { type: currentView === 'today' ? 'tasks' : currentView, action: 'add', row: null };
+  modalMode = { type: currentView, action: 'add', row: null };
   buildModalForm(modalMode.type, null);
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -751,7 +611,6 @@ function esc(str) {
 (function init() {
   const d = new Date();
   document.getElementById('today-date').textContent = d.toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  document.getElementById('config-overlay').style.display = 'none';
   loadData();
 })();
 </script>
