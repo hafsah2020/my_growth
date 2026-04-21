@@ -360,13 +360,22 @@ function renderTasks(filter='all', search='') {
   document.getElementById('content').innerHTML = `
     <div class="filter-bar">
       <input class="search-input" placeholder="Search tasks…" oninput="renderTasks(getActiveFilter('tf'),this.value)" value="${esc(search)}" />
-      ${['all','inprog'].map(f=>`<button class="filter-btn ${filter===f?'active':''}" id="tf-${f}" onclick="setFilter('tf','${f}',renderTasks)">${f==='all'?'All':f==='inprog'?'In Progress'}</button>`).join('')}
+      ${['all','inprog','done'].map(f=>`<button class="filter-btn ${filter===f?'active':''}" id="tf-${f}" onclick="setFilter('tf','${f}',renderTasks)">${f==='all'?'All':f==='inprog'?'In Progress':'Done'}</button>`).join('')}
     </div>
     <div class="section-header"><span class="section-title">Tasks</span><span class="section-count">${tasks.length}</span></div>
     <div class="task-list">${tasks.length?tasks.map(taskRow).join(''):'<div class="empty">No tasks found</div>'}</div>`;
 }
 
-
+function taskRow(t) {
+  const done = statusClass(t.status)==='done';
+  return `<div class="task-row">
+    <div class="task-check ${done?'done':''}" onclick="event.stopPropagation();toggleTaskDone(${t._row},${done})"></div>
+    <div class="task-row-body">
+      <div class="task-title ${done?'done':''}">${esc(t.title)}</div>
+      <div class="task-meta">${badge(t.status)}${badge(t.priority,true)}${t.project?`<span class="task-project">${esc(t.project)}</span>`:''}</div>
+    </div>
+  </div>`;
+}
 
 function renderMeetings(filter='all', search='') {
   let meetings = [...allData.meetings].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
